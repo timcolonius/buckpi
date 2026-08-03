@@ -24,6 +24,10 @@ produced by `Buck.nb`. Unit expressions may use `*`, `/`, parentheses, and
 powers—for example `m/s`, `kg/m^3`, `Pa*s`, and `N/m`. Calculations use exact
 rational arithmetic.
 
+Variable labels accept ordinary text and a safe LaTeX-style subset, including
+Greek commands, subscripts, and superscripts: `\rho`, `\lambda`, `c_p`,
+`U_{\infty}`, and `T_0` are rendered as mathematical symbols in the app.
+
 ## Local development
 
 ```bash

@@ -1,7 +1,7 @@
 import unittest
 from fractions import Fraction
 
-from buckpi import UnitError, analyze, analyze_options, dimensions
+from buckpi import SymbolError, UnitError, analyze, analyze_options, dimensions, symbol_html
 
 
 class BuckPiTests(unittest.TestCase):
@@ -51,6 +51,16 @@ class BuckPiTests(unittest.TestCase):
     def test_unknown_unit(self):
         with self.assertRaises(UnitError):
             dimensions("furlong/fortnight")
+
+    def test_latex_style_symbols(self):
+        self.assertEqual(symbol_html(r"\rho"), "ρ")
+        self.assertEqual(symbol_html(r"U_{\infty}"), "U<sub>∞</sub>")
+        self.assertEqual(symbol_html(r"c_p"), "c<sub>p</sub>")
+        self.assertEqual(symbol_html(r"\Delta p"), "Δ p")
+
+    def test_unsupported_symbol_command(self):
+        with self.assertRaises(SymbolError):
+            symbol_html(r"\notacommand")
 
 
 if __name__ == "__main__":

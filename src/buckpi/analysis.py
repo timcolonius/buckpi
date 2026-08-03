@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 from itertools import combinations
 from .units import dimensions
+from .symbols import symbol_html
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,22 @@ class PiGroup:
         top = " · ".join(numerator) or "1"
         bottom = " · ".join(denominator)
         return top if not bottom else f"{top} / ({bottom})"
+
+    def expression_html(self, names: list[str]) -> str:
+        """Return a safe, typeset HTML representation of the group."""
+        numerator, denominator = [], []
+        for name, power in zip(names, self.exponents):
+            if not power:
+                continue
+            target = numerator if power > 0 else denominator
+            magnitude = abs(power)
+            formatted = symbol_html(name)
+            if magnitude != 1:
+                formatted += f"<sup>{_fraction_text(magnitude)}</sup>"
+            target.append(formatted)
+        top = " &middot; ".join(numerator) or "1"
+        bottom = " &middot; ".join(denominator)
+        return top if not bottom else f'<span class="fraction"><span>{top}</span><span>{bottom}</span></span>'
 
 
 @dataclass(frozen=True)
@@ -88,6 +105,8 @@ def analyze_options(variables, unit_power=None) -> tuple[AnalysisResult, ...]:
     names = [name for name, _ in pairs]
     if any(not name for name in names) or len(set(names)) != len(names):
         raise ValueError("Variable names must be non-empty and unique")
+    for name in names:
+        symbol_html(name)
     columns = [dimensions(unit) for _, unit in pairs]
     matrix = [[column[row] for column in columns] for row in range(7)]
     rank = _rank(matrix)
