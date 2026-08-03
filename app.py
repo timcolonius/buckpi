@@ -112,27 +112,18 @@ HEADER_STYLE = {
     "padding": "10px 12px",
     "border": "1px solid #a9cadc",
     "font-weight": "600",
-    "display": "flex",
-    "align-items": "center",
-    "justify-content": "center",
 }
 OPTION_STYLE = {
     "background": "#e3f0f7",
     "padding": "10px 12px",
     "border": "1px solid #b9d4e4",
     "font-weight": "600",
-    "display": "flex",
-    "align-items": "center",
-    "justify-content": "center",
 }
 MATH_CELL_STYLE = {
     "background": "white",
     "padding": "10px 12px",
     "border": "1px solid #b9d4e4",
-    "min-height": "72px",
-    "display": "flex",
-    "align-items": "center",
-    "justify-content": "center",
+    "box-sizing": "border-box",
 }
 
 EXAMPLES = {
@@ -279,38 +270,81 @@ def remove_row(target):
 
 def result_table(answers):
     answer = answers[0]
+    pi_width = min(320, max(230, 780 // max(answer.group_count, 1)))
+    grid_width = 80 + answer.group_count * pi_width
     summary = pn.pane.HTML(
         f'<h2>Result</h2><p>{len(answer.names)} variables, rank {answer.rank}: '
         f'<strong>{answer.group_count} independent dimensionless group(s)</strong>, shown in '
         f'<strong>{len(answers)} admissible form(s)</strong>.</p>'
     )
+    option_header = pn.FlexBox(
+        pn.pane.HTML("Option", margin=0),
+        width=80,
+        height=42,
+        sizing_mode="fixed",
+        margin=0,
+        align_items="center",
+        justify_content="center",
+        styles=HEADER_STYLE,
+    )
+    pi_headers = [
+        pn.FlexBox(
+            pn.pane.HTML(f"&Pi;<sub>{i}</sub>", margin=0),
+            width=pi_width,
+            height=42,
+            sizing_mode="fixed",
+            margin=0,
+            align_items="center",
+            justify_content="center",
+            styles=HEADER_STYLE,
+        )
+        for i in range(1, answer.group_count + 1)
+    ]
     header = pn.Row(
-        pn.pane.HTML("Option", width=80, styles=HEADER_STYLE),
-        *[
-            pn.pane.HTML(
-                f"&Pi;<sub>{i}</sub>", sizing_mode="stretch_width", styles=HEADER_STYLE
-            )
-            for i in range(1, answer.group_count + 1)
-        ],
-        sizing_mode="stretch_width",
+        option_header,
+        *pi_headers,
+        width=grid_width,
+        sizing_mode=None,
+        margin=0,
     )
     option_rows = []
     for row_number, option in enumerate(answers, 1):
+        option_cell = pn.FlexBox(
+            pn.pane.HTML(str(row_number), margin=0),
+            width=80,
+            height=86,
+            sizing_mode="fixed",
+            margin=0,
+            align_items="center",
+            justify_content="center",
+            styles=OPTION_STYLE,
+        )
         cells = [
-            pn.pane.LaTeX(
-                r"$\displaystyle " + group.expression_latex(list(option.names)) + "$",
-                renderer="katex",
-                height=76,
-                sizing_mode="stretch_width",
+            pn.FlexBox(
+                pn.pane.LaTeX(
+                    r"$\displaystyle " + group.expression_latex(list(option.names)) + "$",
+                    renderer="katex",
+                    sizing_mode="stretch_width",
+                    margin=0,
+                    styles={"font-size": "20px", "text-align": "center"},
+                ),
+                width=pi_width,
+                height=86,
+                sizing_mode="fixed",
+                margin=0,
+                align_items="center",
+                justify_content="center",
                 styles=MATH_CELL_STYLE,
             )
             for group in option.groups
         ]
         option_rows.append(
             pn.Row(
-                pn.pane.HTML(str(row_number), width=80, height=76, styles=OPTION_STYLE),
+                option_cell,
                 *cells,
-                sizing_mode="stretch_width",
+                width=grid_width,
+                sizing_mode=None,
+                margin=0,
             )
         )
     note = pn.pane.HTML(
@@ -319,10 +353,23 @@ def result_table(answers):
     grid = pn.Column(
         header,
         *option_rows,
-        sizing_mode="stretch_width",
+        width=grid_width,
+        sizing_mode=None,
+        align="center",
         styles={"overflow-x": "auto"},
     )
-    return pn.Column(summary, grid, note, styles={"background": "white", "border": "1px solid #b9d4e4", "border-radius": "10px", "padding": "16px 18px"})
+    return pn.Column(
+        summary,
+        grid,
+        note,
+        sizing_mode="stretch_width",
+        styles={
+            "background": "white",
+            "border": "1px solid #b9d4e4",
+            "border-radius": "10px",
+            "padding": "16px 18px",
+        },
+    )
 
 
 def calculate_groups(event=None):
@@ -344,7 +391,7 @@ def calculate_groups(event=None):
     except (ValueError, UnitError, SymbolError) as exc:
         result.objects = [
             pn.pane.HTML(
-                f'<div class="bkpi-error"><strong>Check the input:</strong> {escape(str(exc))}</div>'
+                f'<div class="bkpi-error"><strong>Error:</strong> {escape(str(exc))}</div>'
             )
         ]
     result.styles = {}
