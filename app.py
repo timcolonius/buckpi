@@ -257,6 +257,22 @@ def remove_row(target):
 
 def result_table(answers):
     answer = answers[0]
+    card_styles = {
+        "background": "white",
+        "border": "1px solid #b9d4e4",
+        "border-radius": "10px",
+        "padding": "16px 18px",
+    }
+    if answer.group_count == 0:
+        return pn.Column(
+            pn.pane.HTML(
+                "<h2>Result</h2><p><strong>The hypothesized dimensionless relationship "
+                "does not exist</strong> for the specified variables and dimensions.</p>"
+            ),
+            sizing_mode="stretch_width",
+            styles=card_styles,
+        )
+
     pi_width = min(320, max(230, 780 // max(answer.group_count, 1)))
     grid_width = 80 + answer.group_count * pi_width
     summary = pn.pane.HTML(
@@ -354,12 +370,7 @@ def result_table(answers):
         grid,
         note,
         sizing_mode="stretch_width",
-        styles={
-            "background": "white",
-            "border": "1px solid #b9d4e4",
-            "border-radius": "10px",
-            "padding": "16px 18px",
-        },
+        styles=card_styles,
     )
 
 
@@ -367,7 +378,7 @@ def calculate_groups(event=None):
     variables = [
         (name.value_input, unit.value_input)
         for name, unit, _, _, _, _ in rows
-        if name.value.strip() or unit.value.strip()
+        if name.value_input.strip() or unit.value_input.strip()
     ]
     preferred = [
         name.value_input

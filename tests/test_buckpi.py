@@ -36,6 +36,12 @@ class BuckPiTests(unittest.TestCase):
             target_exponents.append(option.groups[0].exponents[target])
         self.assertEqual(target_exponents, [1, 1, 1])
 
+    def test_no_dimensionless_relationship(self):
+        options = analyze_options([("L", "m"), ("T", "s")])
+        self.assertEqual(len(options), 1)
+        self.assertEqual(options[0].group_count, 0)
+        self.assertEqual(options[0].groups, ())
+
     def test_unit_power_filter(self):
         options = analyze_options(
             [("T", "s"), ("L", "m"), ("g", "m/s^2")], unit_power=["T"]
