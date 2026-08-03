@@ -12,7 +12,7 @@ pn.config.raw_css.append("""
   --buck-blue: #126a9c;
   --buck-mid: #4e91b8;
   --buck-soft: #dcecf5;
-  --buck-pale: #f2f8fc;
+  --buck-pale: #f3f4f6;
   --buck-line: #b9d4e4;
 }
 body { background: var(--buck-pale); color: var(--buck-navy); }
@@ -118,12 +118,17 @@ OPTION_STYLE = {
     "padding": "10px 12px",
     "border": "1px solid #b9d4e4",
     "font-weight": "600",
+    "display": "flex",
+    "align-items": "center",
 }
 MATH_CELL_STYLE = {
     "background": "white",
     "padding": "10px 12px",
     "border": "1px solid #b9d4e4",
-    "min-height": "48px",
+    "min-height": "72px",
+    "display": "flex",
+    "align-items": "center",
+    "justify-content": "center",
 }
 
 EXAMPLES = {
@@ -148,7 +153,6 @@ example = pn.widgets.Select(
 calculate = pn.widgets.Button(
     name="Find dimensionless groups", button_type="primary", width=250
 )
-clear = pn.widgets.Button(name="Clear", button_type="light", width=90)
 add = pn.widgets.Button(name="+ Add row", button_type="light", width=110)
 table = pn.Column(sizing_mode="stretch_width")
 result = pn.Column(sizing_mode="stretch_width")
@@ -190,7 +194,15 @@ def make_row(name_value="", unit_value=""):
         placeholder="e.g. kg/m^3",
         width=240,
     )
-    require = pn.widgets.Checkbox(name="", value=False, width=165, align="center")
+    require = pn.widgets.Checkbox(name="", value=False, width=20, margin=0)
+    require_cell = pn.Row(
+        require,
+        width=165,
+        height=42,
+        margin=(5, 10),
+        styles={"display": "flex", "justify-content": "center", "align-items": "center"},
+    )
+    remove = pn.widgets.Button(name="Remove", button_type="light", width=80, align="center")
     preview_text = "$" + symbol_latex(name_value) + "$" if name_value else r"$\text{preview}$"
     preview = pn.pane.LaTeX(
         preview_text,
@@ -202,8 +214,9 @@ def make_row(name_value="", unit_value=""):
     name.param.watch(lambda event, pane=preview: update_preview(event, pane), "value")
     for widget in (name, unit, require):
         widget.param.watch(mark_example_edited, "value")
-    row_layout = pn.Row(name, unit, require, preview, sizing_mode="stretch_width")
-    return name, unit, require, preview, row_layout
+    remove.on_click(lambda event, target=name: remove_row(target))
+    row_layout = pn.Row(name, unit, require_cell, preview, remove, sizing_mode="stretch_width")
+    return name, unit, require, preview, remove, row_layout
 
 
 def refresh_table():
@@ -230,9 +243,10 @@ def refresh_table():
         unit_heading,
         exponent_heading,
         pn.pane.Markdown("**Preview**", width=105),
+        pn.Spacer(width=80, margin=(5, 10)),
         sizing_mode="stretch_width",
     )
-    table.objects = [heading, *[row[4] for row in rows], add]
+    table.objects = [heading, *[row[5] for row in rows], add]
 
 
 def load_example(event=None):
@@ -249,6 +263,12 @@ def load_example(event=None):
 
 def add_row(event=None):
     rows.append(make_row())
+    refresh_table()
+    mark_example_edited()
+
+
+def remove_row(target):
+    rows[:] = [row for row in rows if row[0] is not target]
     refresh_table()
     mark_example_edited()
 
@@ -271,17 +291,17 @@ def result_table(answers):
     for row_number, option in enumerate(answers, 1):
         cells = [
             pn.pane.LaTeX(
-                "$" + group.expression_latex(list(option.names)) + "$",
+                r"$\displaystyle " + group.expression_latex(list(option.names)) + "$",
                 renderer="katex",
                 width=220,
-                height=52,
+                height=76,
                 styles=MATH_CELL_STYLE,
             )
             for group in option.groups
         ]
         option_rows.append(
             pn.Row(
-                pn.pane.HTML(str(row_number), width=80, styles=OPTION_STYLE),
+                pn.pane.HTML(str(row_number), width=80, height=76, styles=OPTION_STYLE),
                 *cells,
             )
         )
@@ -295,12 +315,12 @@ def result_table(answers):
 def calculate_groups(event=None):
     variables = [
         (name.value, unit.value)
-        for name, unit, _, _, _ in rows
+        for name, unit, _, _, _, _ in rows
         if name.value.strip() or unit.value.strip()
     ]
     preferred = [
         name.value
-        for name, _, require, _, _ in rows
+        for name, _, require, _, _, _ in rows
         if require.value and name.value.strip()
     ]
     try:
@@ -319,21 +339,8 @@ def calculate_groups(event=None):
     calculate.button_type = "primary"
 
 
-def clear_rows(event=None):
-    for name, unit, require, _, _ in rows:
-        name.value = ""
-        unit.value = ""
-        require.value = False
-    result.objects = []
-    result.styles = {}
-    calculate.name = "Find dimensionless groups"
-    calculate.button_type = "primary"
-    mark_example_edited()
-
-
 example.param.watch(load_example, "value")
 calculate.on_click(calculate_groups)
-clear.on_click(clear_rows)
 add.on_click(add_row)
 
 app = pn.Column(
@@ -342,7 +349,7 @@ app = pn.Column(
         '<div class="bkpi-banner-meta">Tim Colonius &middot; Caltech</div>'
         '<div class="bkpi-brand">'
         '<div class="bkpi-mark" aria-hidden="true"><span></span><span></span><span></span></div>'
-        '<div><h1>BuckPi</h1><p>Buckingham &Pi; theorem dimensional analysis</p></div>'
+        '<div><h1>BuckPi</h1><p>Dimensional analysis</p></div>'
         '</div></div>'
     ),
     pn.pane.HTML(
@@ -350,7 +357,7 @@ app = pn.Column(
         'It applies the Buckingham &Pi; theorem to your variables and dimensions, then lists every '
         'admissible independent set of &Pi; groups. Start from an example or build your own problem below.</p></div>'
     ),
-    pn.Row(example, pn.Spacer(width=12), clear),
+    pn.Row(example),
     table,
     calculate,
     result,
