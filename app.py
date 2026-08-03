@@ -7,13 +7,74 @@ from buckpi import SymbolError, UnitError, analyze_options, symbol_latex
 pn.extension("katex", sizing_mode="stretch_width")
 
 pn.config.raw_css.append("""
-:root { --buck-ink: #17212b; --buck-blue: #176b87; }
-body { background: #f7f8f6; }
-.bkpi-hero { padding: 22px 26px; border-left: 6px solid #d8a529; background: linear-gradient(120deg,#e7f2f3,#f8f5ea); border-radius: 10px; }
-.bkpi-hero h1 { color:#17212b; margin:0 0 4px; font-size:32px; }
-.bkpi-hero p { color:#53606a; margin:0; }
-.bkpi-card { background:white; border:1px solid #d9deda; border-radius:10px; padding:16px 18px; }
-.bkpi-error { background:#fff0ee; border-left:4px solid #b44335; padding:12px 16px; border-radius:6px; }
+:root {
+  --buck-navy: #0b2d4d;
+  --buck-blue: #126a9c;
+  --buck-mid: #4e91b8;
+  --buck-soft: #dcecf5;
+  --buck-pale: #f2f8fc;
+  --buck-line: #b9d4e4;
+}
+body { background: var(--buck-pale); color: var(--buck-navy); }
+.bkpi-banner {
+  overflow: hidden;
+  border: 1px solid var(--buck-line);
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 5px 18px rgba(11, 45, 77, 0.10);
+}
+.bkpi-banner-meta {
+  padding: 6px 20px;
+  background: var(--buck-soft);
+  color: #416b86;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-align: right;
+}
+.bkpi-brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 24px 20px;
+}
+.bkpi-mark { display: flex; align-items: center; gap: 8px; padding-left: 24px; position: relative; }
+.bkpi-mark::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 22px;
+  border-top: 2px solid var(--buck-mid);
+  border-bottom: 2px solid var(--buck-mid);
+  box-shadow: 0 -8px 0 -6px var(--buck-mid), 0 8px 0 -6px var(--buck-mid);
+}
+.bkpi-mark span {
+  display: block;
+  width: 22px;
+  height: 22px;
+  transform: rotate(45deg);
+  border-radius: 3px;
+}
+.bkpi-mark span:nth-child(1) { background: #8bc0dc; }
+.bkpi-mark span:nth-child(2) { background: #3f8db7; }
+.bkpi-mark span:nth-child(3) { background: #0e5f91; }
+.bkpi-brand h1 { color: var(--buck-navy); margin: 0; font-size: 34px; line-height: 1; }
+.bkpi-brand p { color: #52738a; margin: 5px 0 0; font-size: 14px; }
+.bkpi-intro {
+  background: #e8f3f9;
+  border-left: 5px solid var(--buck-blue);
+  border-radius: 7px;
+  color: #244f6b;
+  line-height: 1.55;
+  padding: 13px 18px;
+}
+.bkpi-intro p { margin: 0; }
+.bkpi-error { background:#e5f1f8; border-left:4px solid #174f75; padding:12px 16px; border-radius:6px; }
+@media (max-width: 620px) {
+  .bkpi-brand { gap: 14px; padding: 16px; }
+  .bkpi-mark { transform: scale(0.86); transform-origin: left center; margin-right: -8px; }
+  .bkpi-brand h1 { font-size: 29px; }
+}
 """)
 
 UNIT_TIP = (
@@ -33,35 +94,35 @@ REQUIRE_TIP = (
 )
 
 EDITED_EXAMPLE_STYLESHEET = """
-select, .bk-input { color: #9ca3af !important; font-style: italic !important; }
+select, .bk-input { color: #7794a8 !important; font-style: italic !important; }
 """
 PREVIEW_STYLE = {
-    "color": "#176b87",
+    "color": "#126a9c",
     "padding": "7px 8px",
     "min-height": "38px",
 }
 PREVIEW_ERROR_STYLE = {
-    "color": "#b44335",
+    "color": "#174f75",
     "padding": "7px 8px",
     "min-height": "38px",
 }
 HEADER_STYLE = {
-    "background": "#176b87",
+    "background": "#126a9c",
     "color": "white",
     "padding": "10px 12px",
-    "border": "1px solid #cfd8d8",
+    "border": "1px solid #a9cadc",
     "font-weight": "600",
 }
 OPTION_STYLE = {
-    "background": "#eef6f7",
+    "background": "#e3f0f7",
     "padding": "10px 12px",
-    "border": "1px solid #cfd8d8",
+    "border": "1px solid #b9d4e4",
     "font-weight": "600",
 }
 MATH_CELL_STYLE = {
     "background": "white",
     "padding": "10px 12px",
-    "border": "1px solid #cfd8d8",
+    "border": "1px solid #b9d4e4",
     "min-height": "48px",
 }
 
@@ -99,17 +160,16 @@ def mark_example_edited(event=None):
         if result.objects:
             result.styles = {
                 "opacity": "0.35",
-                "filter": "grayscale(1)",
                 "transition": "opacity 120ms ease",
             }
             calculate.name = "Recalculate dimensionless groups"
-            calculate.button_type = "warning"
+            calculate.button_type = "primary"
 
 
 def update_preview(event, preview):
     if not event.new.strip():
         preview.object = r"$\text{preview}$"
-        preview.styles = PREVIEW_STYLE | {"color": "#9ca3a7"}
+        preview.styles = PREVIEW_STYLE | {"color": "#7794a8"}
         return
     try:
         preview.object = "$" + symbol_latex(event.new) + "$"
@@ -137,7 +197,7 @@ def make_row(name_value="", unit_value=""):
         renderer="katex",
         width=105,
         height=42,
-        styles=PREVIEW_STYLE if name_value else PREVIEW_STYLE | {"color": "#9ca3a7"},
+        styles=PREVIEW_STYLE if name_value else PREVIEW_STYLE | {"color": "#7794a8"},
     )
     name.param.watch(lambda event, pane=preview: update_preview(event, pane), "value")
     for widget in (name, unit, require):
@@ -229,7 +289,7 @@ def result_table(answers):
         "<small>Each row is a complete independent set. Equivalent rows differ only in the chosen basis.</small>"
     )
     grid = pn.Column(header, *option_rows, styles={"overflow-x": "auto"})
-    return pn.Column(summary, grid, note, styles={"background": "white", "border": "1px solid #d9deda", "border-radius": "10px", "padding": "16px 18px"})
+    return pn.Column(summary, grid, note, styles={"background": "white", "border": "1px solid #b9d4e4", "border-radius": "10px", "padding": "16px 18px"})
 
 
 def calculate_groups(event=None):
@@ -278,15 +338,19 @@ add.on_click(add_row)
 
 app = pn.Column(
     pn.pane.HTML(
-        '<div class="bkpi-hero"><h1>BuckPi</h1><p>Dimensional analysis using the Buckingham &Pi; theorem</p></div>'
+        '<div class="bkpi-banner">'
+        '<div class="bkpi-banner-meta">Tim Colonius &middot; Caltech</div>'
+        '<div class="bkpi-brand">'
+        '<div class="bkpi-mark" aria-hidden="true"><span></span><span></span><span></span></div>'
+        '<div><h1>BuckPi</h1><p>Buckingham &Pi; theorem dimensional analysis</p></div>'
+        '</div></div>'
+    ),
+    pn.pane.HTML(
+        '<div class="bkpi-intro"><p>BuckPi reveals the dimensionless structure of a physical problem. '
+        'It applies the Buckingham &Pi; theorem to your variables and dimensions, then lists every '
+        'admissible independent set of &Pi; groups. Start from an example or build your own problem below.</p></div>'
     ),
     pn.Row(example, pn.Spacer(width=12), clear),
-    pn.pane.HTML(
-        '<div class="bkpi-card"><p>Enter each variable using ordinary text or LaTeX-style notation such as '
-        '<code>\\rho</code>, <code>c_p</code>, <code>U_{\\infty}</code>, or <code>\\Delta p</code>. '
-        'Enter units separately using expressions such as <code>m/s</code>, <code>kg/m^3</code>, '
-        '<code>Pa*s</code>, or <code>N/m</code>. By default, every admissible set of &Pi; groups is shown.</p></div>'
-    ),
     table,
     calculate,
     result,
