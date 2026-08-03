@@ -135,9 +135,6 @@ loading_example = False
 example = pn.widgets.Select(
     name="Load an example", options=list(EXAMPLES), value="Pendulum", width=280
 )
-calculate = pn.widgets.Button(
-    name="Find dimensionless groups", button_type="primary", width=250
-)
 add = pn.widgets.Button(name="+ Add row", button_type="light", width=110)
 table = pn.Column(sizing_mode="stretch_width")
 result = pn.Column(sizing_mode="stretch_width")
@@ -146,13 +143,7 @@ result = pn.Column(sizing_mode="stretch_width")
 def mark_example_edited(event=None):
     if not loading_example:
         example.stylesheets = [EDITED_EXAMPLE_STYLESHEET]
-        if result.objects:
-            result.styles = {
-                "opacity": "0.35",
-                "transition": "opacity 120ms ease",
-            }
-            calculate.name = "Recalculate dimensionless groups"
-            calculate.button_type = "primary"
+        calculate_groups()
 
 
 def update_preview(event, preview):
@@ -171,11 +162,16 @@ def update_preview(event, preview):
 def make_row(name_value="", unit_value=""):
     index = len(rows) + 1
     name = pn.widgets.TextInput(
-        name=f"Variable {index}", value=name_value, placeholder=r"e.g. \rho", width=150
+        name=f"Variable {index}",
+        value=name_value,
+        value_input=name_value,
+        placeholder=r"e.g. \rho",
+        width=150,
     )
     unit = pn.widgets.TextInput(
         name="Dimensions / units",
         value=unit_value,
+        value_input=unit_value,
         placeholder="e.g. kg/m^3",
         width=240,
     )
@@ -196,9 +192,10 @@ def make_row(name_value="", unit_value=""):
         height=42,
         styles=PREVIEW_STYLE if name_value else PREVIEW_STYLE | {"color": "#7794a8"},
     )
-    name.param.watch(lambda event, pane=preview: update_preview(event, pane), "value")
-    for widget in (name, unit, require):
-        widget.param.watch(mark_example_edited, "value")
+    name.param.watch(lambda event, pane=preview: update_preview(event, pane), "value_input")
+    name.param.watch(mark_example_edited, "value_input")
+    unit.param.watch(mark_example_edited, "value_input")
+    require.param.watch(mark_example_edited, "value")
     remove.on_click(lambda event, target=name: remove_row(target))
     row_layout = pn.Row(name, unit, require_cell, preview, remove, sizing_mode="stretch_width")
     return name, unit, require, preview, remove, row_layout
@@ -368,14 +365,14 @@ def result_table(answers):
 
 def calculate_groups(event=None):
     variables = [
-        (name.value, unit.value)
+        (name.value_input, unit.value_input)
         for name, unit, _, _, _, _ in rows
         if name.value.strip() or unit.value.strip()
     ]
     preferred = [
-        name.value
+        name.value_input
         for name, _, require, _, _, _ in rows
-        if require.value and name.value.strip()
+        if require.value and name.value_input.strip()
     ]
     try:
         if any(not name.strip() or not unit.strip() for name, unit in variables):
@@ -389,12 +386,9 @@ def calculate_groups(event=None):
             )
         ]
     result.styles = {}
-    calculate.name = "Find dimensionless groups"
-    calculate.button_type = "primary"
 
 
 example.param.watch(load_example, "value")
-calculate.on_click(calculate_groups)
 add.on_click(add_row)
 
 app = pn.Column(
@@ -413,7 +407,6 @@ app = pn.Column(
     ),
     pn.Row(example),
     table,
-    calculate,
     result,
     pn.pane.Markdown(
         "Exact rational linear algebra runs locally in your browser. No data is uploaded.  \n"
