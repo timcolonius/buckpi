@@ -8,11 +8,10 @@ version = "0.1.0"
 description = "Buckingham Pi dimensional analysis in Python and the browser"
 authors = [{name = "Tim Colonius"}]
 requires-python = ">=3.9"
-dependencies = ["panel>=1.4"]
+dependencies = ["panel>=1.4", "pint==0.24.4"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-

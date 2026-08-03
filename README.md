@@ -24,6 +24,11 @@ produced by `Buck.nb`. Unit expressions may use `*`, `/`, parentheses, and
 powers—for example `m/s`, `kg/m^3`, `Pa*s`, and `N/m`. Calculations use exact
 rational arithmetic.
 
+Unit parsing uses Pint's comprehensive registry. SI, US customary, CGS,
+prefixed, pluralized, and mixed-system expressions are accepted, including
+`slug/ft^3`, `lbf`, `psi`, `mph`, and `centipoise`. BuckPi retains only each
+quantity's dimensionality; numerical conversion factors are irrelevant.
+
 Variable labels accept ordinary text and a safe LaTeX-style subset, including
 Greek commands, subscripts, and superscripts: `\rho`, `\lambda`, `c_p`,
 `U_{\infty}`, and `T_0` are rendered as mathematical symbols in the app.

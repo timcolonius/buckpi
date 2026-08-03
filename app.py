@@ -16,6 +16,13 @@ body { background: #f7f8f6; }
 .bkpi-error { background:#fff0ee; border-left:4px solid #b44335; padding:12px 16px; border-radius:6px; }
 """)
 
+UNIT_TIP = (
+    "Use any Pint-recognized unit name or abbreviation, including SI, US customary, and CGS. "
+    "Combine units with * or /, use ^ or ** for powers, and use parentheses for grouping. "
+    "Examples: kg/m^3, N/m, Pa*s, slug/ft^3, lbf, psi, and mph. Prefixes, plurals, and mixed "
+    "unit systems are allowed. BuckPi uses dimensionality only; it does not convert numerical values."
+)
+
 EDITED_EXAMPLE_STYLESHEET = """
 select, .bk-input { color: #9ca3af !important; font-style: italic !important; }
 """
@@ -101,7 +108,11 @@ def make_row(name_value="", unit_value=""):
         name=f"Variable {index}", value=name_value, placeholder=r"e.g. \rho", width=150
     )
     unit = pn.widgets.TextInput(
-        name="Dimensions / units", value=unit_value, placeholder="e.g. kg/m^3", width=240
+        name="Dimensions / units",
+        value=unit_value,
+        placeholder="e.g. kg/m^3",
+        description=UNIT_TIP,
+        width=240,
     )
     require = pn.widgets.Checkbox(name="", value=False, width=165, align="center")
     preview_text = "$" + symbol_latex(name_value) + "$" if name_value else r"$\text{preview}$"
@@ -235,6 +246,10 @@ app = pn.Column(
         '<code>\\rho</code>, <code>c_p</code>, <code>U_{\\infty}</code>, or <code>\\Delta p</code>. '
         'Enter units separately using expressions such as <code>m/s</code>, <code>kg/m^3</code>, '
         '<code>Pa*s</code>, or <code>N/m</code>. By default, every admissible set of &Pi; groups is shown.</p></div>'
+    ),
+    pn.pane.HTML(
+        '<details class="bkpi-card"><summary><strong>What unit inputs are accepted?</strong></summary>'
+        f'<p>{escape(UNIT_TIP)}</p></details>'
     ),
     table,
     calculate,

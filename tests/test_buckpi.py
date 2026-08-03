@@ -12,6 +12,16 @@ class BuckPiTests(unittest.TestCase):
         self.assertEqual(dimensions("N/m"), dimensions("kg/s^2"))
         self.assertEqual(dimensions("Pa*s"), dimensions("kg/(m*s)"))
 
+    def test_mixed_and_extended_unit_registry(self):
+        self.assertEqual(dimensions("slug/ft^3"), dimensions("kg/m^3"))
+        self.assertEqual(dimensions("lbf"), dimensions("N"))
+        self.assertEqual(dimensions("psi"), dimensions("Pa"))
+        self.assertEqual(dimensions("mph"), dimensions("m/s"))
+        self.assertEqual(dimensions("dyne"), dimensions("N"))
+        self.assertEqual(dimensions("centipoise"), dimensions("Pa*s"))
+        self.assertEqual(dimensions("in"), dimensions("m"))
+        self.assertEqual(dimensions("furlong/fortnight"), dimensions("m/s"))
+
     def test_pendulum(self):
         result = analyze([("T", "s"), ("L", "m"), ("g", "m/s^2")])
         self.assertEqual(result.group_count, 1)
@@ -53,7 +63,7 @@ class BuckPiTests(unittest.TestCase):
 
     def test_unknown_unit(self):
         with self.assertRaises(UnitError):
-            dimensions("furlong/fortnight")
+            dimensions("not_a_real_unit")
 
     def test_latex_style_symbols(self):
         self.assertEqual(symbol_html(r"\rho"), "ρ")
