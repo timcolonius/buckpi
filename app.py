@@ -255,6 +255,21 @@ def remove_row(target):
     mark_example_edited()
 
 
+def aligned_latex(answers):
+    lines = []
+    for option_number, option in enumerate(answers, 1):
+        groups = [
+            rf"\Pi_{{{group_number}}} = "
+            + group.expression_latex(list(option.names))
+            for group_number, group in enumerate(option.groups, 1)
+        ]
+        lines.append(
+            rf"\text{{Option {option_number}:}}\quad & "
+            + r"\qquad ".join(groups)
+        )
+    return r"\begin{aligned}" + "\n" + (r" \\" + "\n").join(lines) + "\n" + r"\end{aligned}"
+
+
 def result_table(answers):
     answer = answers[0]
     card_styles = {
@@ -279,6 +294,40 @@ def result_table(answers):
         f'<h2>Result</h2><p>{len(answer.names)} variables, rank {answer.rank}: '
         f'<strong>{answer.group_count} independent dimensionless group(s)</strong>, shown in '
         f'<strong>{len(answers)} admissible form(s)</strong>.</p>'
+    )
+    clipboard_source = pn.widgets.TextAreaInput(
+        value=aligned_latex(answers), visible=False
+    )
+    copy_button = pn.widgets.Button(
+        name="Copy LaTeX", button_type="primary", width=110
+    )
+    copy_status = pn.pane.HTML("", width=65, margin=(12, 0, 0, 0))
+    copy_button.js_on_click(
+        args={"source": clipboard_source, "status": copy_status},
+        code="""
+const copied = () => {
+  status.text = "<span style='color:#126a9c'>Copied!</span>";
+  setTimeout(() => { status.text = ""; }, 1400);
+};
+if (navigator.clipboard && navigator.clipboard.writeText) {
+  navigator.clipboard.writeText(source.value).then(copied);
+} else {
+  const area = document.createElement("textarea");
+  area.value = source.value;
+  document.body.appendChild(area);
+  area.select();
+  document.execCommand("copy");
+  area.remove();
+  copied();
+}
+""",
+    )
+    result_heading = pn.Row(
+        summary,
+        copy_button,
+        copy_status,
+        sizing_mode="stretch_width",
+        align="center",
     )
     option_header = pn.FlexBox(
         pn.pane.HTML("Option", margin=0, styles={"color": "white", "text-align": "center"}),
@@ -366,9 +415,10 @@ def result_table(answers):
         styles={"overflow-x": "auto"},
     )
     return pn.Column(
-        summary,
+        result_heading,
         grid,
         note,
+        clipboard_source,
         sizing_mode="stretch_width",
         styles=card_styles,
     )
