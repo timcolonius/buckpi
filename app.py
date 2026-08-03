@@ -285,7 +285,9 @@ def result_table(answers):
     )
     pi_headers = [
         pn.FlexBox(
-            pn.pane.HTML(f"&Pi;<sub>{i}</sub>", margin=0),
+            pn.pane.HTML(
+                f"&Pi;<sub>{i}</sub>", margin=0, styles={"text-align": "center"}
+            ),
             width=pi_width,
             height=42,
             sizing_mode="fixed",
