@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 from itertools import combinations
 from .units import dimensions
-from .symbols import symbol_html
+from .symbols import symbol_html, symbol_latex
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,22 @@ class PiGroup:
         bottom = " &middot; ".join(denominator)
         return top if not bottom else f'<span class="fraction"><span>{top}</span><span>{bottom}</span></span>'
 
+    def expression_latex(self, names: list[str]) -> str:
+        """Return a KaTeX-compatible mathematical representation."""
+        numerator, denominator = [], []
+        for name, power in zip(names, self.exponents):
+            if not power:
+                continue
+            target = numerator if power > 0 else denominator
+            magnitude = abs(power)
+            formatted = "{" + symbol_latex(name) + "}"
+            if magnitude != 1:
+                formatted += "^{" + _fraction_latex(magnitude) + "}"
+            target.append(formatted)
+        top = r"\,".join(numerator) or "1"
+        bottom = r"\,".join(denominator)
+        return top if not bottom else rf"\frac{{{top}}}{{{bottom}}}"
+
 
 @dataclass(frozen=True)
 class AnalysisResult:
@@ -56,6 +72,12 @@ class AnalysisResult:
 
 def _fraction_text(value: Fraction) -> str:
     return str(value.numerator) if value.denominator == 1 else f"({value.numerator}/{value.denominator})"
+
+
+def _fraction_latex(value: Fraction) -> str:
+    if value.denominator == 1:
+        return str(value.numerator)
+    return rf"\frac{{{value.numerator}}}{{{value.denominator}}}"
 
 
 def _rref(matrix):

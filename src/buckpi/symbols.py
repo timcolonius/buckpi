@@ -22,6 +22,8 @@ COMMANDS = {
     "Omega": "Ω", "infty": "∞", "partial": "∂", "nabla": "∇", "ell": "ℓ",
 }
 
+UNICODE_TO_LATEX = {value: f"\\{name}" for name, value in COMMANDS.items()}
+
 
 class _Parser:
     def __init__(self, text: str):
@@ -83,3 +85,21 @@ def symbol_html(label: str) -> str:
     """Render a controlled LaTeX-style variable label as safe HTML."""
     return _Parser(label.strip()).parse()
 
+
+def symbol_latex(label: str) -> str:
+    """Return validated LaTeX source suitable for rendering with KaTeX."""
+    cleaned = label.strip()
+    _Parser(cleaned).parse()  # Validate commands and balanced groups.
+    output = []
+    for character in cleaned:
+        if character in UNICODE_TO_LATEX:
+            output.append(UNICODE_TO_LATEX[character] + " ")
+        elif character in "$%&#~":
+            output.append("\\" + character)
+        elif character == "<":
+            output.append("\\lt ")
+        elif character == ">":
+            output.append("\\gt ")
+        else:
+            output.append(character)
+    return "".join(output)

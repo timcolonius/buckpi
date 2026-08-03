@@ -1,7 +1,10 @@
 import unittest
 from fractions import Fraction
 
-from buckpi import SymbolError, UnitError, analyze, analyze_options, dimensions, symbol_html
+from buckpi import (
+    SymbolError, UnitError, analyze, analyze_options, dimensions, symbol_html,
+    symbol_latex,
+)
 
 
 class BuckPiTests(unittest.TestCase):
@@ -57,6 +60,14 @@ class BuckPiTests(unittest.TestCase):
         self.assertEqual(symbol_html(r"U_{\infty}"), "U<sub>∞</sub>")
         self.assertEqual(symbol_html(r"c_p"), "c<sub>p</sub>")
         self.assertEqual(symbol_html(r"\Delta p"), "Δ p")
+        self.assertEqual(symbol_latex(r"U_{\infty}"), r"U_{\infty}")
+        self.assertEqual(symbol_latex("ρ"), r"\rho ")
+
+    def test_group_latex(self):
+        result = analyze([(r"\rho", "kg/m^3"), (r"U_\infty", "m/s"), ("p", "Pa")])
+        rendered = result.groups[0].expression_latex(list(result.names))
+        self.assertIn(r"\frac", rendered)
+        self.assertIn(r"\rho", rendered)
 
     def test_unsupported_symbol_command(self):
         with self.assertRaises(SymbolError):
