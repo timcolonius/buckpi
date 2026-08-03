@@ -1,0 +1,675 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 14.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     22117,        667]
+NotebookOptionsPosition[     20890,        639]
+NotebookOutlinePosition[     21290,        655]
+CellTagsIndexPosition[     21247,        652]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"setupBPT", "[", "terms_List", "]"}], ":=", 
+  RowBox[{"With", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"ud", "=", 
+      RowBox[{"Union", "[", 
+       RowBox[{
+        RowBox[{"Flatten", "[", 
+         RowBox[{
+          RowBox[{"UnitDimensions", "/@", "terms"}], ",", "1"}], "]"}], "[", 
+        RowBox[{"[", 
+         RowBox[{"All", ",", "1"}], "]"}], "]"}], "]"}]}], "}"}], ",", 
+    RowBox[{
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{"MemberQ", "[", 
+        RowBox[{"ud", ",", "_UnitDimensions"}], "]"}], ",", 
+       RowBox[{"Throw", "[", "None", "]"}]}], "]"}], ";", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"Length", "@", "terms"}], "-", 
+        RowBox[{"Length", "[", "ud", "]"}]}], ",", "ud"}], "}"}]}]}], 
+   "]"}]}], "\n", 
+ RowBox[{
+  RowBox[{"UDToExp", "[", "dimensions_List", "]"}], ":=", 
+  RowBox[{"Times", "@@", 
+   RowBox[{"(", 
+    RowBox[{"dimensions", "/.", " ", 
+     RowBox[{
+      RowBox[{"List", "[", 
+       RowBox[{"d_String", ",", "n_"}], "]"}], ":>", 
+      RowBox[{"Power", "[", 
+       RowBox[{"d", ",", "n"}], "]"}]}]}], ")"}]}]}], "\n", 
+ RowBox[{
+  RowBox[{"Nondimensionalize", "[", 
+   RowBox[{"expr_", ",", "vars_List"}], "]"}], ":=", 
+  RowBox[{"With", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"exp", "=", 
+      RowBox[{"expr", "/.", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"Power", "[", 
+           RowBox[{"q_Quantity", ",", "n_"}], "]"}], ":>", 
+          RowBox[{
+           RowBox[{"UDToExp", "[", 
+            RowBox[{"UnitDimensions", "[", "q", "]"}], "]"}], "^", "n"}]}], 
+         ",", 
+         RowBox[{"qu_Quantity", ":>", 
+          RowBox[{"UDToExp", "[", 
+           RowBox[{"UnitDimensions", "[", "qu", "]"}], "]"}]}]}], "}"}]}]}], 
+     "}"}], ",", 
+    RowBox[{"With", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"res", "=", 
+        RowBox[{"Solve", "[", 
+         RowBox[{
+          RowBox[{"Thread", "[", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{
+              RowBox[{"(", 
+               RowBox[{"List", "@@", 
+                RowBox[{"PowerExpand", "[", "exp", "]"}]}], ")"}], "/.", " ", 
+              
+              RowBox[{
+               RowBox[{"Power", "[", 
+                RowBox[{"unit_String", ",", "n_"}], "]"}], ":>", "n"}]}], 
+             ")"}], "==", "0"}], "]"}], ",", "vars"}], "]"}]}], "}"}], ",", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Flatten", "[", "res", "]"}], "===", 
+         RowBox[{"{", "}"}]}], ",", 
+        RowBox[{"Throw", "[", "None", "]"}], ",", 
+        RowBox[{"With", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"nondim", "=", 
+            RowBox[{"expr", "/.", " ", 
+             RowBox[{"q_Quantity", ":>", 
+              RowBox[{"QuantityMagnitude", "[", "q", "]"}]}]}]}], "}"}], ",", 
+          
+          RowBox[{"First", "[", 
+           RowBox[{"nondim", "/.", " ", "res"}], "]"}]}], "]"}]}], "]"}]}], 
+     "]"}]}], "]"}]}], "\n", 
+ RowBox[{
+  RowBox[{"Buckingham\[Pi]", "[", 
+   RowBox[{"terms_List", ",", 
+    RowBox[{"const", ":", 
+     RowBox[{"{", "__Integer", "}"}]}]}], "]"}], ":=", 
+  RowBox[{"Catch", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"res", "=", 
+         RowBox[{"setupBPT", "[", "terms", "]"}]}], "}"}], ",", 
+       RowBox[{
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"Length", "[", 
+            RowBox[{"Union", "[", "const", "]"}], "]"}], "=!=", 
+           RowBox[{"First", "[", "res", "]"}]}], ",", 
+          RowBox[{"Throw", "[", "None", "]"}]}], "]"}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{"MemberQ", "[", 
+           RowBox[{"const", ",", 
+            RowBox[{"x_", "/;", 
+             RowBox[{"x", ">", 
+              RowBox[{"Length", "[", "terms", "]"}]}]}]}], "]"}], ",", 
+          RowBox[{"Throw", "[", "None", "]"}]}], "]"}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"With", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"c", "=", "#"}], "}"}], ",", 
+          RowBox[{"Module", "[", 
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{"temp", ",", 
+              RowBox[{"vars", "=", 
+               RowBox[{"{", "}"}]}]}], "}"}], ",", 
+            RowBox[{
+             RowBox[{"Check", "[", 
+              RowBox[{
+               RowBox[{"temp", "=", 
+                RowBox[{
+                 RowBox[{
+                  RowBox[{"If", "[", 
+                   RowBox[{
+                    RowBox[{"Not", "[", 
+                    RowBox[{"MemberQ", "[", 
+                    RowBox[{"const", ",", "#"}], "]"}], "]"}], ",", 
+                    RowBox[{"With", "[", 
+                    RowBox[{
+                    RowBox[{"{", 
+                    RowBox[{"u", "=", 
+                    RowBox[{"Unique", "[", "]"}]}], "}"}], ",", 
+                    RowBox[{
+                    RowBox[{"AppendTo", "[", 
+                    RowBox[{"vars", ",", "u"}], "]"}], ";", 
+                    RowBox[{
+                    RowBox[{"terms", "[", 
+                    RowBox[{"[", "#", "]"}], "]"}], "^", "u"}]}]}], "]"}], 
+                    ",", 
+                    RowBox[{"If", "[", 
+                    RowBox[{
+                    RowBox[{"c", "=!=", "#"}], ",", "1", ",", 
+                    RowBox[{"terms", "[", 
+                    RowBox[{"[", "#", "]"}], "]"}]}], "]"}]}], "]"}], "&"}], "/@", 
+                 RowBox[{"Range", "[", 
+                  RowBox[{"Length", "[", "terms", "]"}], "]"}]}]}], ",", 
+               RowBox[{"Throw", "[", "None", "]"}], ",", 
+               RowBox[{"{", 
+                RowBox[{"Part", "::", "partw"}], "}"}]}], "]"}], ";", 
+             "\[IndentingNewLine]", 
+             RowBox[{"Nondimensionalize", "[", 
+              RowBox[{
+               RowBox[{"Times", "@@", "temp"}], ",", "vars"}], "]"}]}]}], 
+           "]"}]}], "]"}]}]}], "]"}], "&"}], "/@", "const"}], 
+   "]"}]}]}], "Input",
+ CellChangeTimes->{{3.937051256345772*^9, 3.9370512563484163`*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"b91aff0e-f325-4cfa-bb10-2004cbc392b5"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"BPTMatrixLabels", "=", 
+   RowBox[{"{", 
+    RowBox[{
+    "\"\<pressure\>\"", ",", "\"\<dynamic viscosity\>\"", ",", 
+     "\"\<velocity\>\"", ",", "\"\<characteristic length\>\"", ",", 
+     "\"\<mass density\>\""}], "}"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"P", "=", 
+   RowBox[{"Quantity", "[", 
+    RowBox[{"p", ",", 
+     RowBox[{"\"\<Newtons\>\"", "/", 
+      RowBox[{"\"\<Meters\>\"", "^", "2"}]}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"mu", "=", 
+   RowBox[{"Quantity", "[", 
+    RowBox[{"\[Mu]", ",", 
+     RowBox[{"(", 
+      RowBox[{"\"\<Pascals\>\"", "*", "\"\<Seconds\>\""}], ")"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"V", "=", 
+   RowBox[{"Quantity", "[", 
+    RowBox[{"v", ",", 
+     RowBox[{"\"\<Meters\>\"", "/", "\"\<Seconds\>\""}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"L", "=", 
+   RowBox[{"Quantity", "[", 
+    RowBox[{"d", ",", "\"\<Meters\>\""}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Rho", "=", 
+   RowBox[{"Quantity", "[", 
+    RowBox[{"\[Rho]", ",", 
+     RowBox[{"\"\<Kilograms\>\"", "/", 
+      RowBox[{"\"\<Meters\>\"", "^", "3"}]}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"terms", "=", 
+   RowBox[{"{", 
+    RowBox[{"P", ",", "mu", ",", "V", ",", "L", ",", "Rho"}], "}"}]}], 
+  ";"}]}], "Input",
+ CellChangeTimes->{{3.937051172142169*^9, 3.937051172145172*^9}},
+ CellLabel->"In[5]:=",ExpressionUUID->"642d35ec-3c49-4c54-92d1-f5424ca497cc"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"MatrixForm", "[", 
+  RowBox[{
+   RowBox[{"Outer", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Buckingham\[Pi]", "[", 
+       RowBox[{"terms", ",", 
+        RowBox[{"{", 
+         RowBox[{"#1", ",", "#2"}], "}"}]}], "]"}], "&"}], ",", 
+     RowBox[{"Range", "[", "5", "]"}], ",", 
+     RowBox[{"Range", "[", "5", "]"}]}], "]"}], ",", 
+   RowBox[{"TableHeadings", "->", 
+    RowBox[{"{", 
+     RowBox[{"BPTMatrixLabels", ",", "BPTMatrixLabels"}], "}"}]}]}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.937051193116973*^9, 3.937051193120082*^9}},
+ CellLabel->"In[12]:=",ExpressionUUID->"5a7b6540-45fa-492a-b9df-a64188862941"],
+
+Cell[BoxData[
+ TagBox[
+  RowBox[{"(", "\[NoBreak]", 
+   TagBox[GridBox[{
+      {
+       StyleBox["\[Null]",
+        ShowStringCharacters->False], 
+       TagBox["\<\"pressure\"\>",
+        HoldForm], 
+       TagBox["\<\"dynamic viscosity\"\>",
+        HoldForm], 
+       TagBox["\<\"velocity\"\>",
+        HoldForm], 
+       TagBox["\<\"characteristic length\"\>",
+        HoldForm], 
+       TagBox["\<\"mass density\"\>",
+        HoldForm]},
+      {
+       TagBox["\<\"pressure\"\>",
+        HoldForm], "None", 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox["p", 
+          RowBox[{
+           SuperscriptBox["v", "2"], " ", "\[Rho]"}]], ",", 
+         FractionBox["\[Mu]", 
+          RowBox[{"d", " ", "v", " ", "\[Rho]"}]]}], "}"}], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{
+           SuperscriptBox["d", "2"], " ", "p", " ", "\[Rho]"}], 
+          SuperscriptBox["\[Mu]", "2"]], ",", 
+         FractionBox[
+          RowBox[{"d", " ", "v", " ", "\[Rho]"}], "\[Mu]"]}], "}"}], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox["p", 
+          RowBox[{
+           SuperscriptBox["v", "2"], " ", "\[Rho]"}]], ",", 
+         FractionBox[
+          RowBox[{"d", " ", "v", " ", "\[Rho]"}], "\[Mu]"]}], "}"}], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{"d", " ", "p"}], 
+          RowBox[{"v", " ", "\[Mu]"}]], ",", 
+         FractionBox[
+          RowBox[{"d", " ", "v", " ", "\[Rho]"}], "\[Mu]"]}], "}"}]},
+      {
+       TagBox["\<\"dynamic viscosity\"\>",
+        HoldForm], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox["\[Mu]", 
+          RowBox[{"d", " ", "v", " ", "\[Rho]"}]], ",", 
+         FractionBox["p", 
+          RowBox[{
+           SuperscriptBox["v", "2"], " ", "\[Rho]"}]]}], "}"}], "None", 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox["\[Mu]", 
+          RowBox[{"d", " ", 
+           SqrtBox["p"], " ", 
+           SqrtBox["\[Rho]"]}]], ",", 
+         FractionBox[
+          RowBox[{"v", " ", 
+           SqrtBox["\[Rho]"]}], 
+          SqrtBox["p"]]}], "}"}], "None", 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{"v", " ", "\[Mu]"}], 
+          RowBox[{"d", " ", "p"}]], ",", 
+         FractionBox[
+          RowBox[{
+           SuperscriptBox["v", "2"], " ", "\[Rho]"}], "p"]}], "}"}]},
+      {
+       TagBox["\<\"velocity\"\>",
+        HoldForm], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{"d", " ", "v", " ", "\[Rho]"}], "\[Mu]"], ",", 
+         FractionBox[
+          RowBox[{
+           SuperscriptBox["d", "2"], " ", "p", " ", "\[Rho]"}], 
+          SuperscriptBox["\[Mu]", "2"]]}], "}"}], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{"v", " ", 
+           SqrtBox["\[Rho]"]}], 
+          SqrtBox["p"]], ",", 
+         FractionBox["\[Mu]", 
+          RowBox[{"d", " ", 
+           SqrtBox["p"], " ", 
+           SqrtBox["\[Rho]"]}]]}], "}"}], "None", 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{"v", " ", 
+           SqrtBox["\[Rho]"]}], 
+          SqrtBox["p"]], ",", 
+         FractionBox[
+          RowBox[{"d", " ", 
+           SqrtBox["p"], " ", 
+           SqrtBox["\[Rho]"]}], "\[Mu]"]}], "}"}], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{"v", " ", "\[Mu]"}], 
+          RowBox[{"d", " ", "p"}]], ",", 
+         FractionBox[
+          RowBox[{
+           SuperscriptBox["d", "2"], " ", "p", " ", "\[Rho]"}], 
+          SuperscriptBox["\[Mu]", "2"]]}], "}"}]},
+      {
+       TagBox["\<\"characteristic length\"\>",
+        HoldForm], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{"d", " ", "v", " ", "\[Rho]"}], "\[Mu]"], ",", 
+         FractionBox["p", 
+          RowBox[{
+           SuperscriptBox["v", "2"], " ", "\[Rho]"}]]}], "}"}], "None", 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{"d", " ", 
+           SqrtBox["p"], " ", 
+           SqrtBox["\[Rho]"]}], "\[Mu]"], ",", 
+         FractionBox[
+          RowBox[{"v", " ", 
+           SqrtBox["\[Rho]"]}], 
+          SqrtBox["p"]]}], "}"}], "None", 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{"d", " ", "p"}], 
+          RowBox[{"v", " ", "\[Mu]"}]], ",", 
+         FractionBox[
+          RowBox[{
+           SuperscriptBox["v", "2"], " ", "\[Rho]"}], "p"]}], "}"}]},
+      {
+       TagBox["\<\"mass density\"\>",
+        HoldForm], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{"d", " ", "v", " ", "\[Rho]"}], "\[Mu]"], ",", 
+         FractionBox[
+          RowBox[{"d", " ", "p"}], 
+          RowBox[{"v", " ", "\[Mu]"}]]}], "}"}], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{
+           SuperscriptBox["v", "2"], " ", "\[Rho]"}], "p"], ",", 
+         FractionBox[
+          RowBox[{"v", " ", "\[Mu]"}], 
+          RowBox[{"d", " ", "p"}]]}], "}"}], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{
+           SuperscriptBox["d", "2"], " ", "p", " ", "\[Rho]"}], 
+          SuperscriptBox["\[Mu]", "2"]], ",", 
+         FractionBox[
+          RowBox[{"v", " ", "\[Mu]"}], 
+          RowBox[{"d", " ", "p"}]]}], "}"}], 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{
+           SuperscriptBox["v", "2"], " ", "\[Rho]"}], "p"], ",", 
+         FractionBox[
+          RowBox[{"d", " ", "p"}], 
+          RowBox[{"v", " ", "\[Mu]"}]]}], "}"}], "None"}
+     },
+     GridBoxAlignment->{"Columns" -> {{Center}}, "Rows" -> {{Baseline}}},
+     GridBoxDividers->{
+      "Columns" -> {False, True, {False}, False}, 
+       "Rows" -> {False, True, {False}, False}},
+     GridBoxSpacings->{"Columns" -> {
+         Offset[0.27999999999999997`], {
+          Offset[0.7]}, 
+         Offset[0.27999999999999997`]}, "Rows" -> {
+         Offset[0.2], {
+          Offset[0.4]}, 
+         Offset[0.2]}}],
+    {OutputFormsDump`HeadedRows, OutputFormsDump`HeadedColumns}], 
+   "\[NoBreak]", ")"}],
+  Function[BoxForm`e$, 
+   MatrixForm[
+   BoxForm`e$, 
+    TableHeadings -> {{
+      "pressure", "dynamic viscosity", "velocity", "characteristic length", 
+       "mass density"}, {
+      "pressure", "dynamic viscosity", "velocity", "characteristic length", 
+       "mass density"}}]]]], "Output",
+ CellChangeTimes->{3.937051261983972*^9, 3.937055270814495*^9},
+ CellLabel->
+  "Out[12]//MatrixForm=",ExpressionUUID->"bad9fe98-fd6e-4769-aabf-\
+43e6667d1edd"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"shit", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<force\>\"", ",", "\"\<mass\>\"", ",", "\"\<accel\>\""}], 
+    "}"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"F", " ", "=", " ", 
+   RowBox[{"Quantity", "[", 
+    RowBox[{"f", ",", 
+     RowBox[{"\"\<Kilograms\>\"", " ", "*", " ", 
+      RowBox[{"\"\<Meters\>\"", "/", 
+       RowBox[{"\"\<Seconds\>\"", "^", "2"}]}]}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"M", " ", "=", " ", 
+   RowBox[{"Quantity", "[", 
+    RowBox[{"m", ",", "\"\<Kilograms\>\""}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"A", "=", " ", 
+   RowBox[{"Quantity", "[", 
+    RowBox[{"a", ",", 
+     RowBox[{"\"\<Meters\>\"", "/", 
+      RowBox[{"\"\<Seconds\>\"", "^", "2"}]}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"terms", " ", "=", " ", 
+    RowBox[{"{", 
+     RowBox[{"F", ",", "M", ",", "A"}], "}"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{"MatrixForm", "[", 
+  RowBox[{
+   RowBox[{"Outer", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Buckingham\[Pi]", "[", 
+       RowBox[{"terms", ",", 
+        RowBox[{"{", 
+         RowBox[{"#1", ",", "#2"}], "}"}]}], "]"}], "&"}], ",", 
+     RowBox[{"Range", "[", "3", "]"}], ",", 
+     RowBox[{"Range", "[", "3", "]"}]}], "]"}], ",", 
+   RowBox[{"TableHeadings", "->", 
+    RowBox[{"{", 
+     RowBox[{"shit", ",", "shit"}], "}"}]}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.937051287890044*^9, 3.937051470688179*^9}, {
+  3.9370553110280848`*^9, 3.937055352736106*^9}},
+ CellLabel->"In[49]:=",ExpressionUUID->"ecae3872-341c-402b-9d4a-17406396fead"],
+
+Cell[BoxData[
+ TagBox[
+  RowBox[{"(", "\[NoBreak]", 
+   TagBox[GridBox[{
+      {
+       StyleBox["\[Null]",
+        ShowStringCharacters->False], 
+       TagBox["\<\"force\"\>",
+        HoldForm], 
+       TagBox["\<\"mass\"\>",
+        HoldForm], 
+       TagBox["\<\"accel\"\>",
+        HoldForm]},
+      {
+       TagBox["\<\"force\"\>",
+        HoldForm], "None", "None", "None"},
+      {
+       TagBox["\<\"mass\"\>",
+        HoldForm], "None", "None", "None"},
+      {
+       TagBox["\<\"accel\"\>",
+        HoldForm], "None", "None", "None"}
+     },
+     GridBoxAlignment->{"Columns" -> {{Center}}, "Rows" -> {{Baseline}}},
+     GridBoxDividers->{
+      "Columns" -> {False, True, {False}, False}, 
+       "Rows" -> {False, True, {False}, False}},
+     GridBoxSpacings->{"Columns" -> {
+         Offset[0.27999999999999997`], {
+          Offset[0.7]}, 
+         Offset[0.27999999999999997`]}, "Rows" -> {
+         Offset[0.2], {
+          Offset[0.4]}, 
+         Offset[0.2]}}],
+    {OutputFormsDump`HeadedRows, OutputFormsDump`HeadedColumns}], 
+   "\[NoBreak]", ")"}],
+  Function[BoxForm`e$, 
+   MatrixForm[
+   BoxForm`e$, 
+    TableHeadings -> {{"force", "mass", "accel"}, {
+      "force", "mass", "accel"}}]]]], "Output",
+ CellChangeTimes->{{3.937051472601512*^9, 3.937051478980939*^9}, 
+   3.93705527402514*^9, {3.9370553156246433`*^9, 3.937055360121871*^9}},
+ CellLabel->
+  "Out[54]//MatrixForm=",ExpressionUUID->"cf1411cb-6694-4303-b248-\
+c93573464a94"]
+}, Open  ]],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"shit2", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<length\>\"", ",", "\"\<length3\>\""}], "}"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"V", " ", "=", " ", 
+   RowBox[{"Quantity", "[", 
+    RowBox[{"v", ",", 
+     RowBox[{"\"\<Meters\>\"", "^", "3"}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"R", " ", "=", " ", 
+   RowBox[{"Quantity", "[", 
+    RowBox[{"r", ",", "\"\<Meters\>\""}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"terms", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{"V", ",", "R"}], "}"}]}], ";"}], "\[IndentingNewLine]"}], "Input",\
+
+ CellChangeTimes->{{3.937051503003234*^9, 
+  3.93705156617721*^9}},ExpressionUUID->"33d80592-32fe-4634-a03d-\
+0e9fa1e46d05"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"MatrixForm", "[", 
+  RowBox[{
+   RowBox[{"Outer", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Buckingham\[Pi]", "[", 
+       RowBox[{"terms", ",", 
+        RowBox[{"{", 
+         RowBox[{"#1", ",", "#2"}], "}"}]}], "]"}], "&"}], ",", 
+     RowBox[{"Range", "[", "2", "]"}], ",", 
+     RowBox[{"Range", "[", "2", "]"}]}], "]"}], ",", 
+   RowBox[{"TableHeadings", "->", 
+    RowBox[{"{", 
+     RowBox[{"shit2", ",", "shit2"}], "}"}]}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.9370515769701967`*^9, 3.937051588751081*^9}},
+ CellLabel->"In[28]:=",ExpressionUUID->"3a109abd-f45f-41b0-863a-2d76c55fc5df"],
+
+Cell[BoxData[
+ TagBox[
+  RowBox[{"(", "\[NoBreak]", GridBox[{
+     {"None", "None"},
+     {"None", "None"}
+    },
+    GridBoxAlignment->{"Columns" -> {{Center}}, "Rows" -> {{Baseline}}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[0.7]}, 
+        Offset[0.27999999999999997`]}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}}], "\[NoBreak]", ")"}],
+  Function[BoxForm`e$, 
+   MatrixForm[
+   BoxForm`e$, 
+    TableHeadings -> {$CellContext`shit2, $CellContext`shit2}]]]], "Output",
+ CellChangeTimes->{3.9370515927238007`*^9},
+ CellLabel->
+  "Out[28]//MatrixForm=",ExpressionUUID->"7f526651-ef75-454b-a4e4-\
+7182af834775"]
+}, Open  ]]
+},
+WindowSize->{1440, 511},
+WindowMargins->{{165, Automatic}, {Automatic, 359}},
+FrontEndVersion->"13.2 for Mac OS X ARM (64-bit) (November 18, 2022)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"362f4c65-2f8d-422b-bb2a-6b01439796d6"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 6289, 173, 241, "Input",ExpressionUUID->"b91aff0e-f325-4cfa-bb10-2004cbc392b5"],
+Cell[6846, 195, 1451, 43, 157, "Input",ExpressionUUID->"642d35ec-3c49-4c54-92d1-f5424ca497cc"],
+Cell[CellGroupData[{
+Cell[8322, 242, 648, 17, 30, "Input",ExpressionUUID->"5a7b6540-45fa-492a-b9df-a64188862941"],
+Cell[8973, 261, 6558, 205, 213, "Output",ExpressionUUID->"bad9fe98-fd6e-4769-aabf-43e6667d1edd"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[15568, 471, 1690, 48, 157, "Input",ExpressionUUID->"ecae3872-341c-402b-9d4a-17406396fead"],
+Cell[17261, 521, 1462, 45, 149, "Output",ExpressionUUID->"cf1411cb-6694-4303-b248-c93573464a94"]
+}, Open  ]],
+Cell[18738, 569, 779, 24, 115, "Input",ExpressionUUID->"33d80592-32fe-4634-a03d-0e9fa1e46d05"],
+Cell[CellGroupData[{
+Cell[19542, 597, 627, 16, 30, "Input",ExpressionUUID->"3a109abd-f45f-41b0-863a-2d76c55fc5df"],
+Cell[20172, 615, 702, 21, 63, "Output",ExpressionUUID->"7f526651-ef75-454b-a4e4-7182af834775"]
+}, Open  ]]
+}
+]
+*)
+

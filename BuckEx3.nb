@@ -1,0 +1,1513 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     56111,       1505]
+NotebookOptionsPosition[     51087,       1415]
+NotebookOutlinePosition[     51517,       1432]
+CellTagsIndexPosition[     51474,       1429]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Dimensional Analysis using Mathematica", "Title",
+ CellChangeTimes->{{3.937331178736211*^9, 3.9373311930802803`*^9}, {
+   3.9373323545266037`*^9, 3.937332417528911*^9}, {3.937332451078611*^9, 
+   3.9373324675258303`*^9}, {3.937332572324354*^9, 3.937332576340596*^9}, {
+   3.937332636214216*^9, 3.937332640793364*^9}, {3.937332718737913*^9, 
+   3.937332752854508*^9}, 3.937335702238432*^9, {3.937397735093335*^9, 
+   3.937397737813583*^9}, {3.93739839314435*^9, 3.937398502785137*^9}, {
+   3.937398543137621*^9, 3.9373985636143713`*^9}, {3.937398601299879*^9, 
+   3.937398619854075*^9}, {3.937398656205524*^9, 3.9373987949257402`*^9}, {
+   3.937398860288422*^9, 3.937398923989519*^9}, 3.93739896638653*^9, {
+   3.937399001674695*^9, 3.937399059060523*^9}, {3.937399090990934*^9, 
+   3.937399129894874*^9}, {3.93739926444095*^9, 3.937399273261023*^9}, {
+   3.9373993086343203`*^9, 3.937399359778208*^9}, {3.937399390786347*^9, 
+   3.937399392243456*^9}, {3.9373995690198507`*^9, 3.937399605482751*^9}, {
+   3.9373996516218967`*^9, 3.9373996526905527`*^9}, {3.937399690696227*^9, 
+   3.937399739385562*^9}, {3.93739982128758*^9, 3.937399864513754*^9}, {
+   3.937402744539137*^9, 3.9374027532714767`*^9}, {3.937402791689353*^9, 
+   3.9374028019153214`*^9}, {3.9374028375821466`*^9, 3.937402926885277*^9}, {
+   3.937402960008481*^9, 3.937402975243226*^9}, {3.937403213542894*^9, 
+   3.937403251709651*^9}, {3.9374032817745247`*^9, 3.937403370571632*^9}, 
+   3.937403452265437*^9, {3.937405574327149*^9, 3.937405618328578*^9}, {
+   3.937405774369673*^9, 3.937405779024707*^9}, 3.9374074587162237`*^9, {
+   3.937409520869334*^9, 3.937409537934641*^9}, {3.937410771237114*^9, 
+   3.937410779533587*^9}},ExpressionUUID->"a7698cbc-0131-489e-bf5d-\
+3b625104c222"],
+
+Cell["\<\
+Tim Colonials\[LineSeparator]California Institute of Technology
+October, 2024
+
+While Mathematica offers some routines to employ Buckingham-Pi theorem to do \
+dimensional analysis, I didn\[CloseCurlyQuote]t like the way they worked, so \
+I created my own.  \
+\>", "Text",
+ CellChangeTimes->{{3.9374107975759172`*^9, 3.9374108666426373`*^9}, {
+   3.937410920695284*^9, 3.937410923185543*^9}, 
+   3.9374112288799353`*^9},ExpressionUUID->"57644f09-dc44-40df-86dd-\
+0742a9965d3e"],
+
+Cell[CellGroupData[{
+
+Cell["The module BuckPi", "Section",
+ CellChangeTimes->{{3.937410887005247*^9, 
+  3.937410904579936*^9}},ExpressionUUID->"2327e868-d1b7-4d8c-8fbd-\
+8d530fe1a399"],
+
+Cell[TextData[{
+ "Dimensional analysis will take a list of variables, with associated defined \
+(physical) dimensions of each quantity, and create possible non-dimensional \
+functional relationships amongst the variables, by application of the \
+Buckingham-Pi theorem.  The input list is of the form\n\n",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"sampleinput", " ", "=", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        SubscriptBox["c", "p"], ",", 
+        RowBox[{"\"\<Meters\>\"", "/", "\"\<Seconds\>\""}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"\[Lambda]", ",", "\"\<Meters\>\""}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"g", ",", 
+        RowBox[{"\"\<Meters\>\"", "/", 
+         RowBox[{"\"\<Seconds\>\"", "^", "2"}]}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"h", ",", "\"\<Meters\>\""}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"\[Rho]", ",", 
+        RowBox[{"\"\<Kilograms\>\"", "/", 
+         RowBox[{"\"\<Meters\>\"", "^", "3"}]}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"\[Sigma]", ",", 
+        RowBox[{"\"\<Newtons\>\"", "/", "\"\<Meters\>\""}]}], "}"}]}], 
+     "}"}]}], ";"}]],ExpressionUUID->"62f64148-5ce8-4316-94bf-26224a788d71"],
+ "\n\nwhere each element in the list consists of a pair of quantity/unit \
+values.  \n\nThe quantities are the those of the hypothesized relationship, \
+and the units can be given in any units desired, provided that Mathematica \
+knows what the units are.   The names of these units must be supplied in the \
+correct form.  The units can be combined, as above, using any power-law \
+function of other units.  I like to use all SI MKS units for my inputs as \
+otherwise I get confused.  Note that the units inputted are really proxies \
+for the dimensions of a quantity, expressed in terms of the 7 fundamental \
+base dimensions:  \[OpenCurlyDoubleQuote]TimeUnit\[CloseCurlyDoubleQuote],  \
+\[OpenCurlyDoubleQuote]LengthUnit\[CloseCurlyDoubleQuote], \
+\[OpenCurlyDoubleQuote]MassUnit\[CloseCurlyDoubleQuote], \
+\[OpenCurlyDoubleQuote]ElectricCurrentUnit\[CloseCurlyDoubleQuote], \
+\[OpenCurlyDoubleQuote]TemperatureUnit\[CloseCurlyDoubleQuote], \
+\[OpenCurlyDoubleQuote]AmountUnit\[CloseCurlyDoubleQuote], \
+\[OpenCurlyDoubleQuote]LuminousIntensityUnit\[CloseCurlyDoubleQuote], whose \
+SI units are \[OpenCurlyDoubleQuote]Seconds\[CloseCurlyDoubleQuote], \
+\[CloseCurlyDoubleQuote]Meters\[CloseCurlyDoubleQuote], \
+\[CloseCurlyDoubleQuote]Kilograms\[CloseCurlyDoubleQuote], \
+\[CloseCurlyDoubleQuote]Amperes\[CloseCurlyDoubleQuote], \
+\[CloseCurlyDoubleQuote]Kelvins\[CloseCurlyDoubleQuote], \
+\[CloseCurlyDoubleQuote]Moles\[CloseCurlyDoubleQuote],and \
+\[CloseCurlyDoubleQuote]Candelas\[CloseCurlyDoubleQuote], respectively.\n\n\
+With this single input, BuckPi will return a number of different options that \
+represent valid non-dimensional expressions.  The reason there are multiple \
+outputs is that the non-dimensional groups are not themselves unique, just \
+the ",
+ StyleBox["number of independent",
+  FontSlant->"Italic"],
+ " groups.  We will cover the second optional arguments later in the \
+examples.\n"
+}], "Text",
+ CellChangeTimes->{{3.9374112342771807`*^9, 3.937411328412737*^9}, {
+   3.937411381951689*^9, 3.9374116316207867`*^9}, {3.937411690188115*^9, 
+   3.93741193008556*^9}, {3.9374138011785517`*^9, 3.937413814487268*^9}, 
+   3.937414712783978*^9},ExpressionUUID->"c5bf6675-9a08-44ef-a4be-\
+d736257e142a"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"BuckPi", "[", 
+     RowBox[{"varlist_", ",", 
+      RowBox[{"nonrep_", " ", ":", 
+       RowBox[{"{", "}"}]}], ",", 
+      RowBox[{"pretty_", "  ", ":", " ", "True"}]}], "]"}], " ", ":=", " ", 
+    RowBox[{"Module", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+       "bp", ",", "varnames", ",", "funddim", ",", "q", ",", "getpow", ",", 
+        "m1", ",", "m2", ",", "varunits", ",", "allvars", ",", "ngroups", ",",
+         "userwants", ",", "cases", ",", "checkdet", ",", "allgroups", ",", 
+        "usergets", ",", "pows", ",", "ex", ",", "out"}], "}"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"varnames", " ", "=", " ", 
+        RowBox[{"varlist", "[", 
+         RowBox[{"[", 
+          RowBox[{"All", ",", "1"}], "]"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"varunits", " ", "=", " ", 
+        RowBox[{"varlist", "[", 
+         RowBox[{"[", 
+          RowBox[{"All", ",", "2"}], "]"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"funddim", " ", "=", 
+        RowBox[{
+         RowBox[{"Flatten", "[", " ", 
+          RowBox[{
+           RowBox[{"UnitDimensions", "[", " ", 
+            RowBox[{"{", 
+             RowBox[{
+             "\"\<Seconds\>\"", ",", "\"\<Meters\>\"", ",", 
+              "\"\<Kilograms\>\"", ",", "\"\<Amperes\>\"", ",", 
+              "\"\<Kelvins\>\"", ",", "\"\<Moles\>\"", ",", 
+              "\"\<Candelas\>\""}], "}"}], "]"}], ",", "1"}], "]"}], "[", 
+         RowBox[{"[", 
+          RowBox[{"All", ",", "1"}], "]"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"q", " ", "=", " ", 
+        RowBox[{"UnitDimensions", "[", "varunits", "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"getpow", "[", "lis_", "]"}], " ", ":=", "   ", 
+        RowBox[{
+         RowBox[{"Table", "[", " ", 
+          RowBox[{
+           RowBox[{"Pick", "[", " ", 
+            RowBox[{
+             RowBox[{"lis", "[", 
+              RowBox[{"[", 
+               RowBox[{"All", ",", "2"}], "]"}], "]"}], ",", 
+             RowBox[{"StringEndsQ", "[", " ", 
+              RowBox[{
+               RowBox[{"lis", "[", 
+                RowBox[{"[", 
+                 RowBox[{"All", ",", "1"}], "]"}], "]"}], ",", 
+               RowBox[{"funddim", "[", 
+                RowBox[{"[", "j", "]"}], "]"}]}], " ", "]"}]}], " ", "]"}], 
+           ",", 
+           RowBox[{"{", 
+            RowBox[{"j", ",", "1", ",", 
+             RowBox[{"Length", "[", "funddim", "]"}]}], "}"}]}], "]"}], " ", "/.",
+          "  ", 
+         RowBox[{
+          RowBox[{"{", "}"}], " ", "->", " ", 
+          RowBox[{"{", "0", "}"}]}]}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"m1", " ", "=", " ", 
+        RowBox[{"Map", "[", 
+         RowBox[{"getpow", ",", "q"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"m2", " ", "=", " ", 
+        RowBox[{"m1", "[", 
+         RowBox[{"[", 
+          RowBox[{"All", ",", "All", ",", "1"}], "]"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"bp", " ", "=", " ", 
+        RowBox[{"Transpose", "[", " ", 
+         RowBox[{"NullSpace", "[", " ", 
+          RowBox[{"Transpose", "[", "m2", "]"}], "]"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"allvars", " ", "=", " ", 
+        RowBox[{"Table", "[", " ", 
+         RowBox[{"j", ",", 
+          RowBox[{"{", 
+           RowBox[{"j", ",", "1", ",", 
+            RowBox[{"Length", "[", "varunits", "]"}]}], "}"}]}], "]"}]}], ";",
+        "\[IndentingNewLine]", 
+       RowBox[{"ngroups", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"Dimensions", "[", "bp", "]"}], "[", 
+         RowBox[{"[", "2", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"allgroups", " ", "=", " ", 
+        RowBox[{"Subsets", "[", 
+         RowBox[{"allvars", ",", 
+          RowBox[{"{", "ngroups", "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"userwants", " ", "=", 
+        RowBox[{"Flatten", "[", 
+         RowBox[{"Append", "[", " ", 
+          RowBox[{
+           RowBox[{"Table", "[", " ", 
+            RowBox[{
+             RowBox[{"nonrep", "[", 
+              RowBox[{"[", "j", "]"}], "]"}], ",", 
+             RowBox[{"{", 
+              RowBox[{"j", ",", "1", ",", 
+               RowBox[{"Min", "[", " ", 
+                RowBox[{"ngroups", ",", 
+                 RowBox[{"Length", "[", "nonrep", "]"}]}], "]"}]}], "}"}]}], 
+            "]"}], ",", " ", 
+           RowBox[{"Table", "[", " ", 
+            RowBox[{"_Integer", ",", 
+             RowBox[{"{", 
+              RowBox[{"j", ",", "1", ",", 
+               RowBox[{"ngroups", "-", 
+                RowBox[{"Length", "[", "nonrep", "]"}]}]}], "}"}]}], "]"}]}], 
+          "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{"usergets", " ", "=", " ", 
+         RowBox[{"Position", "[", "  ", 
+          RowBox[{
+           RowBox[{"Subset", "[", 
+            RowBox[{"allvars", ",", 
+             RowBox[{"{", "ngroups", "}"}]}], "]"}], ",", " ", "userwants"}], 
+          "]"}]}], "*)"}], "\[IndentingNewLine]", " ", 
+       RowBox[{"cases", " ", "=", " ", 
+        RowBox[{"allgroups", "[", 
+         RowBox[{"[", 
+          RowBox[{"Flatten", "[", " ", 
+           RowBox[{"Position", "[", " ", 
+            RowBox[{
+             RowBox[{"Subsets", "[", 
+              RowBox[{"allvars", ",", 
+               RowBox[{"{", "ngroups", "}"}]}], "]"}], ",", " ", 
+             "userwants"}], "]"}], "]"}], "]"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"checkdet", " ", "=", "  ", 
+        RowBox[{"Table", "[", " ", 
+         RowBox[{
+          RowBox[{"If", "[", " ", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"Det", "[", "  ", 
+              RowBox[{"bp", "[", 
+               RowBox[{"[", 
+                RowBox[{
+                 RowBox[{"cases", "[", 
+                  RowBox[{"[", "j", "]"}], "]"}], ",", "All"}], "]"}], "]"}], 
+              "]"}], "==", "0"}], ",", "0", ",", "1"}], "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"j", ",", "1", ",", 
+            RowBox[{"Length", "[", "cases", "]"}]}], "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"usergets", " ", "=", " ", 
+        RowBox[{"Pick", "[", " ", 
+         RowBox[{"cases", ",", " ", "checkdet", ",", "1"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"pows", " ", "=", " ", 
+        RowBox[{"Table", "[", " ", 
+         RowBox[{
+          RowBox[{"bp", " ", ".", " ", 
+           RowBox[{"Inverse", "[", " ", 
+            RowBox[{"bp", "[", 
+             RowBox[{"[", 
+              RowBox[{
+               RowBox[{"usergets", "[", 
+                RowBox[{"[", "j", "]"}], "]"}], ",", "All"}], "]"}], "]"}], 
+            "]"}]}], " ", ",", " ", 
+          RowBox[{"{", 
+           RowBox[{"j", ",", "1", ",", 
+            RowBox[{"Length", "[", "usergets", "]"}]}], "}"}]}], "]"}]}], ";",
+        "\[IndentingNewLine]", 
+       RowBox[{"ex", " ", "=", " ", 
+        RowBox[{"Table", "[", " ", 
+         RowBox[{
+          RowBox[{"Table", "[", " ", 
+           RowBox[{
+            RowBox[{"Product", "[", " ", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"varnames", "[", 
+                RowBox[{"[", "ivar", "]"}], "]"}], "^", 
+               RowBox[{"pows", "[", 
+                RowBox[{"[", 
+                 RowBox[{"j", ",", "ivar", ",", "igrp"}], "]"}], "]"}]}], ",", 
+              RowBox[{"{", 
+               RowBox[{"ivar", ",", "1", ",", 
+                RowBox[{"Length", "[", "varlist", "]"}]}], "}"}]}], "]"}], 
+            ",", 
+            RowBox[{"{", 
+             RowBox[{"igrp", ",", "1", ",", "ngroups"}], "}"}]}], "]"}], ",", 
+          
+          RowBox[{"{", 
+           RowBox[{"j", ",", "1", ",", 
+            RowBox[{"Length", "[", "usergets", "]"}]}], "}"}]}], "]"}]}], ";",
+        "\[IndentingNewLine]", 
+       RowBox[{"out", " ", "=", " ", 
+        RowBox[{"If", "[", 
+         RowBox[{"pretty", ",", " ", 
+          RowBox[{"TableForm", "[", " ", 
+           RowBox[{"ex", ",", " ", 
+            RowBox[{"TableHeadings", " ", "->", " ", 
+             RowBox[{"{", " ", 
+              RowBox[{
+               RowBox[{"Table", "[", 
+                RowBox[{"j", ",", 
+                 RowBox[{"{", 
+                  RowBox[{"j", ",", "1", ",", 
+                   RowBox[{"Length", "[", "usergets", "]"}]}], "}"}]}], "]"}],
+                ",", " ", "\[IndentingNewLine]", 
+               RowBox[{"Table", "[", 
+                RowBox[{
+                 RowBox[{"\[CapitalPi]", "[", "j", "]"}], ",", 
+                 RowBox[{"{", 
+                  RowBox[{"j", ",", "1", ",", "ngroups"}], "}"}]}], "]"}]}], 
+              " ", "}"}]}]}], "]"}], ",", "ex"}], "]"}]}]}]}], 
+     "\[IndentingNewLine]", "]"}]}], ";"}], "\[IndentingNewLine]", 
+  "\[IndentingNewLine]"}]], "Input",
+ CellChangeTimes->{{3.937403399452818*^9, 3.9374034284862947`*^9}, {
+   3.93740347674547*^9, 3.9374034774362307`*^9}, {3.937403558357596*^9, 
+   3.93740358055477*^9}, {3.937403616699394*^9, 3.937403638227325*^9}, {
+   3.937403681774581*^9, 3.937403692758662*^9}, {3.93740375788279*^9, 
+   3.937403772400264*^9}, 3.937403812243733*^9, {3.9374038596941357`*^9, 
+   3.9374039484509497`*^9}, {3.937403979082367*^9, 3.937404018358885*^9}, {
+   3.937404056998949*^9, 3.937404119431725*^9}, {3.937404152890505*^9, 
+   3.937404256223981*^9}, {3.937404291699545*^9, 3.937404294260995*^9}, {
+   3.937404430250059*^9, 3.937404483533998*^9}, {3.9374046382553167`*^9, 
+   3.937404835884425*^9}, {3.937404924380768*^9, 3.9374049725656843`*^9}, {
+   3.937405027972508*^9, 3.937405030165481*^9}, {3.93740563106417*^9, 
+   3.9374056941556873`*^9}, {3.937405978343256*^9, 3.937406042798686*^9}, {
+   3.93740681237523*^9, 3.937406814826202*^9}, {3.937406847743425*^9, 
+   3.937406900004485*^9}, {3.937407140773855*^9, 3.9374071733340178`*^9}, {
+   3.937407230328396*^9, 3.937407341651403*^9}, {3.937407722748705*^9, 
+   3.9374077659022818`*^9}, {3.9374078268659973`*^9, 
+   3.9374078629930763`*^9}, {3.937407900096178*^9, 3.93740790321128*^9}, {
+   3.937407964427355*^9, 3.937408021308375*^9}, {3.937408059694556*^9, 
+   3.937408093616518*^9}, 3.937408139076721*^9, {3.937408205364806*^9, 
+   3.937408240614249*^9}, {3.9374086857572803`*^9, 3.937408689710169*^9}, {
+   3.937409495865041*^9, 3.937409511119573*^9}, {3.9374096868489227`*^9, 
+   3.937409712531722*^9}, {3.937409883420775*^9, 3.937409886313757*^9}, {
+   3.937410022308017*^9, 3.9374100233420887`*^9}, {3.9374101101485662`*^9, 
+   3.93741011251051*^9}, {3.937410148218835*^9, 3.9374103117073402`*^9}, {
+   3.937410374791114*^9, 3.937410395366147*^9}, {3.9374105276237707`*^9, 
+   3.937410528514742*^9}, 3.937410587002205*^9},
+ CellLabel->"In[2]:=",ExpressionUUID->"3205ab66-a86c-4290-8f9e-d24640ff3744"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["First examples", "Section",
+ CellChangeTimes->{{3.937411210539415*^9, 3.937411212891225*^9}, 
+   3.937412248250002*^9},ExpressionUUID->"405c58c1-3b3b-473e-9e8a-\
+81f9af4a82b5"],
+
+Cell["\<\
+Suppose we hypothesize that the volume of a sphere is related to its radius.\
+\>", "Text",
+ CellChangeTimes->{{3.9374119436936207`*^9, 
+  3.937411963911318*^9}},ExpressionUUID->"d700ac46-19a4-4eea-8e46-\
+7872e8b36fdb"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"vars", " ", "=", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"V", ",", 
+      RowBox[{"\"\<Meters\>\"", "^", "3"}]}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"R", ",", "\"\<Meters\>\""}], "}"}]}], "}"}]}]], "Input",
+ CellChangeTimes->{{3.9374053065827513`*^9, 3.9374054378270893`*^9}, {
+  3.937405507488226*^9, 3.937405553732486*^9}, {3.937411967822328*^9, 
+  3.9374119854433203`*^9}},
+ CellLabel->"In[3]:=",ExpressionUUID->"48448ae9-8045-4ebd-ade1-bc04523fd186"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"V", ",", 
+     SuperscriptBox["\<\"Meters\"\>", "3"]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"R", ",", "\<\"Meters\"\>"}], "}"}]}], "}"}]], "Output",
+ CellChangeTimes->{3.937405554198804*^9, 3.9374056995211287`*^9, 
+  3.937405817513764*^9, 3.937411987032805*^9, 3.937412033090982*^9, 
+  3.9374147357553177`*^9},
+ CellLabel->"Out[3]=",ExpressionUUID->"9540790c-9d0c-4522-8315-520335fdda7f"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"BuckPi", "[", "vars", "]"}]], "Input",
+ CellChangeTimes->{{3.9374119938484173`*^9, 3.937411995937402*^9}},
+ CellLabel->"In[4]:=",ExpressionUUID->"861c90eb-1484-47e6-a4d7-8849dd037ced"],
+
+Cell[BoxData[
+ TagBox[
+  TagBox[GridBox[{
+     {
+      StyleBox["\[Null]",
+       ShowStringCharacters->False], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "1", "]"}],
+       HoldForm]},
+     {
+      TagBox["1",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["R", "3"]]},
+     {
+      TagBox["2",
+       HoldForm], 
+      FractionBox["R", 
+       SuperscriptBox["V", 
+        RowBox[{"1", "/", "3"}]]]}
+    },
+    GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+    GridBoxDividers->{
+     "Columns" -> {False, True, {False}, False}, 
+      "Rows" -> {False, True, {False}, False}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[2.0999999999999996`]}, 
+        Offset[0.27999999999999997`]}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}}],
+   {OutputFormsDump`HeadedRows, OutputFormsDump`HeadedColumns}],
+  Function[BoxForm`e$, 
+   TableForm[BoxForm`e$, TableHeadings -> {{1, 2}, {
+       $CellContext`\[CapitalPi][1]}}]]]], "Output",
+ CellChangeTimes->{3.9374119963247747`*^9, 3.93741203508745*^9, 
+  3.937414735809033*^9},
+ CellLabel->
+  "Out[4]//TableForm=",ExpressionUUID->"d22f8398-f015-4466-a71b-db7a5348dae3"]
+}, Open  ]],
+
+Cell[TextData[{
+ "We see there is a single Pi group (meaning it is a constant), which we can \
+write as either V = c ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["R", "3"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "6783ff40-2d35-4ab7-837c-378652286d25"],
+ " or R = b ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["V", 
+    RowBox[{"1", "/", "3"}]], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "d1793833-49b2-48f8-8af9-d4088da0eb4f"],
+ ".  Everyone knows from Calculus that c = 4/3 \[Pi], and this cannot be \
+determined from dimensional analysis alone.  However, if we do the \
+dimensional analysis, we could determine the constant from a single \
+experiment where we measure the radius and volume of a sphere!\n\nThe \
+different versions of the Pi groups are chosen according to the simple \
+criteria that each group isolates one of the input variables, and reports it \
+as raised to the first power.  In this case there are two such groups.  \n\n\
+Suppose we hypothesize that the volume of an ellipsoid, V, is related to the \
+lengths of the 3 semi-axes, a,b, and c."
+}], "Text",
+ CellChangeTimes->{{3.9374119436936207`*^9, 3.937411963911318*^9}, {
+  3.9374120486479893`*^9, 3.937412111404607*^9}, {3.937412151767913*^9, 
+  3.937412300035787*^9}, {3.93741233854494*^9, 3.93741234489017*^9}, {
+  3.937413439194235*^9, 3.937413454951344*^9}, {3.937413837766567*^9, 
+  3.9374139283624573`*^9}},ExpressionUUID->"c0da2cef-25da-4bc7-8aee-\
+a6aa557647d8"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"vars2", " ", "=", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"V", ",", 
+      RowBox[{"\"\<Meters\>\"", "^", "3"}]}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"a", ",", "\"\<Meters\>\""}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"b", ",", "\"\<Meters\>\""}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"c", ",", "\"\<Meters\>\""}], "}"}]}], "}"}]}]], "Input",
+ CellChangeTimes->{{3.9374053065827513`*^9, 3.9374054378270893`*^9}, {
+  3.937405507488226*^9, 3.937405553732486*^9}, {3.937411967822328*^9, 
+  3.9374119854433203`*^9}, {3.937412353757717*^9, 3.937412367781672*^9}},
+ CellLabel->"In[5]:=",ExpressionUUID->"ce2e2e2d-ed36-4ce9-8e79-13e8fcf8f24e"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"V", ",", 
+     SuperscriptBox["\<\"Meters\"\>", "3"]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"a", ",", "\<\"Meters\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"b", ",", "\<\"Meters\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"c", ",", "\<\"Meters\"\>"}], "}"}]}], "}"}]], "Output",
+ CellChangeTimes->{3.937405554198804*^9, 3.9374056995211287`*^9, 
+  3.937405817513764*^9, 3.937411987032805*^9, 3.937412033090982*^9, 
+  3.937412372440503*^9, 3.937414735817848*^9},
+ CellLabel->"Out[5]=",ExpressionUUID->"27e83d28-9a42-4f38-9ee2-42c38019cbf8"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"BuckPi", "[", "vars2", "]"}]], "Input",
+ CellChangeTimes->{{3.937412374635313*^9, 3.937412376907298*^9}},
+ CellLabel->"In[6]:=",ExpressionUUID->"95bc8760-fd01-4552-baf9-71bb1f4d0066"],
+
+Cell[BoxData[
+ TagBox[
+  TagBox[GridBox[{
+     {
+      StyleBox["\[Null]",
+       ShowStringCharacters->False], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "1", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "2", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "3", "]"}],
+       HoldForm]},
+     {
+      TagBox["1",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["c", "3"]], 
+      FractionBox["a", "c"], 
+      FractionBox["b", "c"]},
+     {
+      TagBox["2",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["b", "3"]], 
+      FractionBox["a", "b"], 
+      FractionBox["c", "b"]},
+     {
+      TagBox["3",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["a", "3"]], 
+      FractionBox["b", "a"], 
+      FractionBox["c", "a"]},
+     {
+      TagBox["4",
+       HoldForm], 
+      FractionBox["a", 
+       SuperscriptBox["V", 
+        RowBox[{"1", "/", "3"}]]], 
+      FractionBox["b", 
+       SuperscriptBox["V", 
+        RowBox[{"1", "/", "3"}]]], 
+      FractionBox["c", 
+       SuperscriptBox["V", 
+        RowBox[{"1", "/", "3"}]]]}
+    },
+    GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+    GridBoxDividers->{
+     "Columns" -> {False, True, {False}, False}, 
+      "Rows" -> {False, True, {False}, False}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[2.0999999999999996`]}, 
+        Offset[0.27999999999999997`]}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}}],
+   {OutputFormsDump`HeadedRows, OutputFormsDump`HeadedColumns}],
+  Function[BoxForm`e$, 
+   TableForm[BoxForm`e$, TableHeadings -> {{1, 2, 3, 4}, {
+       $CellContext`\[CapitalPi][1], 
+       $CellContext`\[CapitalPi][2], 
+       $CellContext`\[CapitalPi][3]}}]]]], "Output",
+ CellChangeTimes->{3.937412377327005*^9, 3.937414735829709*^9},
+ CellLabel->
+  "Out[6]//TableForm=",ExpressionUUID->"4c6d974b-7eae-45c9-a2c2-e0eb352be4d8"]
+}, Open  ]],
+
+Cell["\<\
+There are 4 possible sets of 3 groups that involve the 4 input variables \
+raised to the first power.   The number can, in this case, be determined from \
+binomial function, 4 choose 3, which is equal to 4.  However, in general, the \
+number may in some cases smaller than this, because it is possible that some \
+of the cases do not result in independent Pi groups.  BuckPi works this out \
+for you.
+
+The second optional argument to BuckPi will specify that we only want certain \
+groups.  The argument is given as a list of quantities, referred to by their \
+position in the variable list.  BuckPi will restrict the output, if possible, \
+to involve only those forms of the groups which involve the specified \
+variables raised to the first power.  For example, if we only want V raised \
+to the first power in the example above, we write\
+\>", "Text",
+ CellChangeTimes->{{3.937412397398259*^9, 3.937412523144978*^9}, {
+  3.937412566048688*^9, 3.937412653220837*^9}, {3.9374134772824087`*^9, 
+  3.9374134789576807`*^9}},ExpressionUUID->"6d1b5e14-d16a-49b9-b5e6-\
+190cb2e7c63a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"BuckPi", "[", 
+  RowBox[{"vars2", ",", " ", 
+   RowBox[{"{", "1", "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.93741265825838*^9, 3.9374126605312977`*^9}},
+ CellLabel->"In[7]:=",ExpressionUUID->"0091cdf5-9fd6-43a7-9363-fef684f6ec2a"],
+
+Cell[BoxData[
+ TagBox[
+  TagBox[GridBox[{
+     {
+      StyleBox["\[Null]",
+       ShowStringCharacters->False], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "1", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "2", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "3", "]"}],
+       HoldForm]},
+     {
+      TagBox["1",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["c", "3"]], 
+      FractionBox["a", "c"], 
+      FractionBox["b", "c"]},
+     {
+      TagBox["2",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["b", "3"]], 
+      FractionBox["a", "b"], 
+      FractionBox["c", "b"]},
+     {
+      TagBox["3",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["a", "3"]], 
+      FractionBox["b", "a"], 
+      FractionBox["c", "a"]}
+    },
+    GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+    GridBoxDividers->{
+     "Columns" -> {False, True, {False}, False}, 
+      "Rows" -> {False, True, {False}, False}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[2.0999999999999996`]}, 
+        Offset[0.27999999999999997`]}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}}],
+   {OutputFormsDump`HeadedRows, OutputFormsDump`HeadedColumns}],
+  Function[BoxForm`e$, 
+   TableForm[BoxForm`e$, TableHeadings -> {{1, 2, 3}, {
+       $CellContext`\[CapitalPi][1], 
+       $CellContext`\[CapitalPi][2], 
+       $CellContext`\[CapitalPi][3]}}]]]], "Output",
+ CellChangeTimes->{3.937412661785178*^9, 3.937414735837715*^9},
+ CellLabel->
+  "Out[7]//TableForm=",ExpressionUUID->"1e75bf81-0206-4b82-9f02-26c858932147"]
+}, Open  ]],
+
+Cell["\<\
+since the 4th possible set of groups above did not involve V to the first \
+power.  Likewise\
+\>", "Text",
+ CellChangeTimes->{{3.9374126656979523`*^9, 
+  3.937412705149478*^9}},ExpressionUUID->"7ee86add-d695-4d75-bfaa-\
+efc119d5e3ba"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"BuckPi", "[", 
+  RowBox[{"vars2", ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "2"}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.93741265825838*^9, 3.9374126605312977`*^9}, {
+  3.9374127099424543`*^9, 3.937412711338254*^9}},
+ CellLabel->"In[8]:=",ExpressionUUID->"bf6352be-86b1-42f6-9c0e-e0aff15ab2de"],
+
+Cell[BoxData[
+ TagBox[
+  TagBox[GridBox[{
+     {
+      StyleBox["\[Null]",
+       ShowStringCharacters->False], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "1", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "2", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "3", "]"}],
+       HoldForm]},
+     {
+      TagBox["1",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["c", "3"]], 
+      FractionBox["a", "c"], 
+      FractionBox["b", "c"]},
+     {
+      TagBox["2",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["b", "3"]], 
+      FractionBox["a", "b"], 
+      FractionBox["c", "b"]}
+    },
+    GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+    GridBoxDividers->{
+     "Columns" -> {False, True, {False}, False}, 
+      "Rows" -> {False, True, {False}, False}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[2.0999999999999996`]}, 
+        Offset[0.27999999999999997`]}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}}],
+   {OutputFormsDump`HeadedRows, OutputFormsDump`HeadedColumns}],
+  Function[BoxForm`e$, 
+   TableForm[BoxForm`e$, TableHeadings -> {{1, 2}, {
+       $CellContext`\[CapitalPi][1], 
+       $CellContext`\[CapitalPi][2], 
+       $CellContext`\[CapitalPi][3]}}]]]], "Output",
+ CellChangeTimes->{3.93741271175231*^9, 3.937414735843493*^9},
+ CellLabel->
+  "Out[8]//TableForm=",ExpressionUUID->"27f4f243-0605-4b87-862e-71c1c0aae3d3"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"BuckPi", "[", 
+  RowBox[{"vars2", ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "2", ",", "3"}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.93741265825838*^9, 3.9374126605312977`*^9}, {
+  3.9374127099424543`*^9, 3.937412725748328*^9}},
+ CellLabel->"In[9]:=",ExpressionUUID->"0da55cfa-fa25-4d59-b3fb-31e29a3d4e8c"],
+
+Cell[BoxData[
+ TagBox[
+  TagBox[GridBox[{
+     {
+      StyleBox["\[Null]",
+       ShowStringCharacters->False], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "1", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "2", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "3", "]"}],
+       HoldForm]},
+     {
+      TagBox["1",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["c", "3"]], 
+      FractionBox["a", "c"], 
+      FractionBox["b", "c"]}
+    },
+    GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+    GridBoxDividers->{
+     "Columns" -> {False, True, {False}, False}, 
+      "Rows" -> {False, True, {False}, False}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[2.0999999999999996`]}, 
+        Offset[0.27999999999999997`]}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}}],
+   {OutputFormsDump`HeadedRows, OutputFormsDump`HeadedColumns}],
+  Function[BoxForm`e$, 
+   TableForm[BoxForm`e$, TableHeadings -> {{1}, {
+       $CellContext`\[CapitalPi][1], 
+       $CellContext`\[CapitalPi][2], 
+       $CellContext`\[CapitalPi][3]}}]]]], "Output",
+ CellChangeTimes->{3.937412726160123*^9, 3.937414735854439*^9},
+ CellLabel->
+  "Out[9]//TableForm=",ExpressionUUID->"d0274432-325b-45de-a837-d1f34dd8ab79"]
+}, Open  ]],
+
+Cell["\<\
+Finally, since we in general do not know how many variables we can specify, \
+BuckPi will ignore the trailing members of the list that cannot have unity \
+power.  For example, there is not valid set of Pi groups that only involve \
+all variables raised to the first power (in this example).  \
+\>", "Text",
+ CellChangeTimes->{{3.9374126656979523`*^9, 3.937412705149478*^9}, {
+  3.937412742185204*^9, 
+  3.9374128318857117`*^9}},ExpressionUUID->"8e486ac6-7256-48e1-8251-\
+1e9a66f01899"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"BuckPi", "[", 
+  RowBox[{"vars2", ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "2", ",", "3", ",", "4"}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.937412728610325*^9, 3.937412733231958*^9}},
+ CellLabel->"In[10]:=",ExpressionUUID->"6af9f1ae-07cc-4491-9d37-4e31873f5b64"],
+
+Cell[BoxData[
+ TagBox[
+  TagBox[GridBox[{
+     {
+      StyleBox["\[Null]",
+       ShowStringCharacters->False], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "1", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "2", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "3", "]"}],
+       HoldForm]},
+     {
+      TagBox["1",
+       HoldForm], 
+      FractionBox["V", 
+       SuperscriptBox["c", "3"]], 
+      FractionBox["a", "c"], 
+      FractionBox["b", "c"]}
+    },
+    GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+    GridBoxDividers->{
+     "Columns" -> {False, True, {False}, False}, 
+      "Rows" -> {False, True, {False}, False}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[2.0999999999999996`]}, 
+        Offset[0.27999999999999997`]}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}}],
+   {OutputFormsDump`HeadedRows, OutputFormsDump`HeadedColumns}],
+  Function[BoxForm`e$, 
+   TableForm[BoxForm`e$, TableHeadings -> {{1}, {
+       $CellContext`\[CapitalPi][1], 
+       $CellContext`\[CapitalPi][2], 
+       $CellContext`\[CapitalPi][3]}}]]]], "Output",
+ CellChangeTimes->{3.937412733787919*^9, 3.9374147358605013`*^9},
+ CellLabel->
+  "Out[10]//TableForm=",ExpressionUUID->"99d51b87-90ad-440c-aad5-\
+700036f8e305"]
+}, Open  ]],
+
+Cell["\<\
+Thus in the above, BuckPi has ignored the 4th variable.
+
+In general, it is possible that does not exist a valid set of Pi groups when \
+various parameters are constrained to appear to the first power.  In this \
+problem, all combinations of 3 of the 4 variables are valid, as shown in the \
+first example.
+
+The third optional argument is a Boolean variable that controls the form of \
+the output.  The default (True) makes a pretty table, whereas setting this \
+argument to False will return a table in standard output form (so that it can \
+easily be manipulated).
+\
+\>", "Text",
+ CellChangeTimes->{{3.937412836227901*^9, 3.937412937852976*^9}, {
+  3.93741311297823*^9, 
+  3.9374131814250402`*^9}},ExpressionUUID->"e7da721a-e34e-4e09-a680-\
+ee357e8f85aa"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"BuckPi", "[", 
+  RowBox[{"vars2", ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "2"}], "}"}], ",", " ", "False"}], "]"}]], "Input",
+ CellChangeTimes->{{3.93741318706048*^9, 3.9374131949351587`*^9}},
+ CellLabel->"In[11]:=",ExpressionUUID->"945978cc-0e70-432c-9d78-5ab582449682"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     FractionBox["V", 
+      SuperscriptBox["c", "3"]], ",", 
+     FractionBox["a", "c"], ",", 
+     FractionBox["b", "c"]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     FractionBox["V", 
+      SuperscriptBox["b", "3"]], ",", 
+     FractionBox["a", "b"], ",", 
+     FractionBox["c", "b"]}], "}"}]}], "}"}]], "Output",
+ CellChangeTimes->{{3.937413188806382*^9, 3.937413195646208*^9}, 
+   3.937414735871293*^9},
+ CellLabel->"Out[11]=",ExpressionUUID->"a1c1fe38-6100-4091-87c6-cbb711cdf55f"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Surface gravity waves", "Section",
+ CellChangeTimes->{{3.937411210539415*^9, 3.937411212891225*^9}, 
+   3.937412248250002*^9, {3.937412962266694*^9, 
+   3.9374129691588373`*^9}},ExpressionUUID->"4b38e6e3-8021-43e7-ae79-\
+7381177d47ce"],
+
+Cell["\<\
+We hypothesize that the phase speed of a surface gravity wave (riding on a \
+constant depth of liquid under a much less dense gaseous atmosphere) is a \
+function of its wavelength, the depth of liquid, the acceleration due to \
+gravity, the density of the liquid, and the surface tension of the liquid-gas \
+interface.\
+\>", "Text",
+ CellChangeTimes->{{3.93741297597231*^9, 
+  3.93741309054327*^9}},ExpressionUUID->"98c11eeb-0cc6-45ac-b677-\
+d68876fe297c"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"sgw", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       SubscriptBox["c", "p"], ",", 
+       RowBox[{"\"\<Meters\>\"", "/", "\"\<Seconds\>\""}]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"\[Lambda]", ",", "\"\<Meters\>\""}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"g", ",", 
+       RowBox[{"\"\<Meters\>\"", "/", 
+        RowBox[{"\"\<Seconds\>\"", "^", "2"}]}]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"h", ",", "\"\<Meters\>\""}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"\[Rho]", ",", 
+       RowBox[{"\"\<Kilograms\>\"", "/", 
+        RowBox[{"\"\<Meters\>\"", "^", "3"}]}]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"\[Sigma]", ",", 
+       RowBox[{"\"\<Newtons\>\"", "/", "\"\<Meters\>\""}]}], "}"}]}], "}"}]}],
+   ";"}]], "Input",
+ CellChangeTimes->{{3.9374129578233852`*^9, 3.9374129580364943`*^9}},
+ CellLabel->"In[12]:=",ExpressionUUID->"ba073084-a4fe-4b45-b2d2-77593a1fd7d1"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"BuckPi", "[", "sgw", "]"}]], "Input",
+ CellChangeTimes->{{3.9374131083114758`*^9, 3.937413109102785*^9}, {
+  3.937413206671175*^9, 3.937413208659485*^9}},
+ CellLabel->"In[13]:=",ExpressionUUID->"e4f2f1f2-f80f-4071-a64d-efabd85edf33"],
+
+Cell[BoxData[
+ TagBox[
+  TagBox[GridBox[{
+     {
+      StyleBox["\[Null]",
+       ShowStringCharacters->False], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "1", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "2", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "3", "]"}],
+       HoldForm]},
+     {
+      TagBox["1",
+       HoldForm], 
+      FractionBox[
+       RowBox[{
+        SqrtBox["h"], " ", 
+        SqrtBox["\[Rho]"], " ", 
+        SubscriptBox["c", "p"]}], 
+       SqrtBox["\[Sigma]"]], 
+      FractionBox["\[Lambda]", "h"], 
+      FractionBox[
+       RowBox[{"g", " ", 
+        SuperscriptBox["h", "2"], " ", "\[Rho]"}], "\[Sigma]"]},
+     {
+      TagBox["2",
+       HoldForm], 
+      FractionBox[
+       RowBox[{
+        SuperscriptBox["\[Rho]", 
+         RowBox[{"1", "/", "4"}]], " ", 
+        SubscriptBox["c", "p"]}], 
+       RowBox[{
+        SuperscriptBox["g", 
+         RowBox[{"1", "/", "4"}]], " ", 
+        SuperscriptBox["\[Sigma]", 
+         RowBox[{"1", "/", "4"}]]}]], 
+      FractionBox[
+       RowBox[{
+        SqrtBox["g"], " ", "\[Lambda]", " ", 
+        SqrtBox["\[Rho]"]}], 
+       SqrtBox["\[Sigma]"]], 
+      FractionBox[
+       RowBox[{
+        SqrtBox["g"], " ", "h", " ", 
+        SqrtBox["\[Rho]"]}], 
+       SqrtBox["\[Sigma]"]]},
+     {
+      TagBox["3",
+       HoldForm], 
+      FractionBox[
+       SubscriptBox["c", "p"], 
+       RowBox[{
+        SqrtBox["g"], " ", 
+        SqrtBox["h"]}]], 
+      FractionBox["\[Lambda]", "h"], 
+      FractionBox[
+       RowBox[{"g", " ", 
+        SuperscriptBox["h", "2"], " ", "\[Rho]"}], "\[Sigma]"]},
+     {
+      TagBox["4",
+       HoldForm], 
+      FractionBox[
+       SubscriptBox["c", "p"], 
+       RowBox[{
+        SqrtBox["g"], " ", 
+        SqrtBox["h"]}]], 
+      FractionBox["\[Lambda]", "h"], 
+      FractionBox["\[Sigma]", 
+       RowBox[{"g", " ", 
+        SuperscriptBox["h", "2"], " ", "\[Rho]"}]]},
+     {
+      TagBox["5",
+       HoldForm], 
+      FractionBox[
+       RowBox[{
+        SqrtBox["\[Lambda]"], " ", 
+        SqrtBox["\[Rho]"], " ", 
+        SubscriptBox["c", "p"]}], 
+       SqrtBox["\[Sigma]"]], 
+      FractionBox[
+       RowBox[{"g", " ", 
+        SuperscriptBox["\[Lambda]", "2"], " ", "\[Rho]"}], "\[Sigma]"], 
+      FractionBox["h", "\[Lambda]"]},
+     {
+      TagBox["6",
+       HoldForm], 
+      FractionBox[
+       SubscriptBox["c", "p"], 
+       RowBox[{
+        SqrtBox["g"], " ", 
+        SqrtBox["\[Lambda]"]}]], 
+      FractionBox["h", "\[Lambda]"], 
+      FractionBox[
+       RowBox[{"g", " ", 
+        SuperscriptBox["\[Lambda]", "2"], " ", "\[Rho]"}], "\[Sigma]"]},
+     {
+      TagBox["7",
+       HoldForm], 
+      FractionBox[
+       SubscriptBox["c", "p"], 
+       RowBox[{
+        SqrtBox["g"], " ", 
+        SqrtBox["\[Lambda]"]}]], 
+      FractionBox["h", "\[Lambda]"], 
+      FractionBox["\[Sigma]", 
+       RowBox[{"g", " ", 
+        SuperscriptBox["\[Lambda]", "2"], " ", "\[Rho]"}]]},
+     {
+      TagBox["8",
+       HoldForm], 
+      FractionBox[
+       RowBox[{"\[Lambda]", " ", "\[Rho]", " ", 
+        SubsuperscriptBox["c", "p", "2"]}], "\[Sigma]"], 
+      FractionBox[
+       RowBox[{"g", " ", "\[Sigma]"}], 
+       RowBox[{"\[Rho]", " ", 
+        SubsuperscriptBox["c", "p", "4"]}]], 
+      FractionBox[
+       RowBox[{"h", " ", "\[Rho]", " ", 
+        SubsuperscriptBox["c", "p", "2"]}], "\[Sigma]"]},
+     {
+      TagBox["9",
+       HoldForm], 
+      FractionBox["\[Lambda]", "h"], 
+      FractionBox[
+       RowBox[{"g", " ", "h"}], 
+       SubsuperscriptBox["c", "p", "2"]], 
+      FractionBox[
+       RowBox[{"h", " ", "\[Rho]", " ", 
+        SubsuperscriptBox["c", "p", "2"]}], "\[Sigma]"]},
+     {
+      TagBox["10",
+       HoldForm], 
+      FractionBox["\[Lambda]", "h"], 
+      FractionBox[
+       RowBox[{"g", " ", "h"}], 
+       SubsuperscriptBox["c", "p", "2"]], 
+      FractionBox["\[Sigma]", 
+       RowBox[{"h", " ", "\[Rho]", " ", 
+        SubsuperscriptBox["c", "p", "2"]}]]},
+     {
+      TagBox["11",
+       HoldForm], 
+      FractionBox[
+       RowBox[{"g", " ", "\[Lambda]"}], 
+       SubsuperscriptBox["c", "p", "2"]], 
+      FractionBox[
+       RowBox[{"g", " ", "h"}], 
+       SubsuperscriptBox["c", "p", "2"]], 
+      FractionBox[
+       RowBox[{"\[Rho]", " ", 
+        SubsuperscriptBox["c", "p", "4"]}], 
+       RowBox[{"g", " ", "\[Sigma]"}]]},
+     {
+      TagBox["12",
+       HoldForm], 
+      FractionBox[
+       RowBox[{"g", " ", "\[Lambda]"}], 
+       SubsuperscriptBox["c", "p", "2"]], 
+      FractionBox[
+       RowBox[{"g", " ", "h"}], 
+       SubsuperscriptBox["c", "p", "2"]], 
+      FractionBox[
+       RowBox[{"g", " ", "\[Sigma]"}], 
+       RowBox[{"\[Rho]", " ", 
+        SubsuperscriptBox["c", "p", "4"]}]]},
+     {
+      TagBox["13",
+       HoldForm], 
+      FractionBox[
+       RowBox[{"g", " ", "\[Lambda]"}], 
+       SubsuperscriptBox["c", "p", "2"]], 
+      FractionBox["h", "\[Lambda]"], 
+      FractionBox[
+       RowBox[{"\[Lambda]", " ", "\[Rho]", " ", 
+        SubsuperscriptBox["c", "p", "2"]}], "\[Sigma]"]},
+     {
+      TagBox["14",
+       HoldForm], 
+      FractionBox[
+       RowBox[{"g", " ", "\[Lambda]"}], 
+       SubsuperscriptBox["c", "p", "2"]], 
+      FractionBox["h", "\[Lambda]"], 
+      FractionBox["\[Sigma]", 
+       RowBox[{"\[Lambda]", " ", "\[Rho]", " ", 
+        SubsuperscriptBox["c", "p", "2"]}]]}
+    },
+    GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+    GridBoxDividers->{
+     "Columns" -> {False, True, {False}, False}, 
+      "Rows" -> {False, True, {False}, False}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[2.0999999999999996`]}, 
+        Offset[0.27999999999999997`]}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}}],
+   {OutputFormsDump`HeadedRows, OutputFormsDump`HeadedColumns}],
+  Function[BoxForm`e$, 
+   TableForm[
+   BoxForm`e$, 
+    TableHeadings -> {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, {
+       $CellContext`\[CapitalPi][1], 
+       $CellContext`\[CapitalPi][2], 
+       $CellContext`\[CapitalPi][3]}}]]]], "Output",
+ CellChangeTimes->{3.937413209607191*^9, 3.93741473589256*^9},
+ CellLabel->
+  "Out[13]//TableForm=",ExpressionUUID->"0822fb82-0886-47dd-89c8-\
+dd7340c2008e"]
+}, Open  ]],
+
+Cell["\<\
+We see there are 14 versions of the Pi groups that involve one (ore more) \
+variables to the first power.  However, the Binomial function for choosing 3 \
+variables from 6 is equal to 20.  Thus there are 6 \
+\[OpenCurlyDoubleQuote]forbidden\[CloseCurlyDoubleQuote] choices of 3 \
+variables.  Here is one of them\
+\>", "Text",
+ CellChangeTimes->{{3.93741297597231*^9, 3.93741309054327*^9}, {
+  3.9374132216755543`*^9, 
+  3.937413322896276*^9}},ExpressionUUID->"f86425d6-4ceb-480a-ad6f-\
+35d85a37f969"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"BuckPi", "[", 
+  RowBox[{"sgw", ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "5", ",", "6"}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.937413334962961*^9, 3.93741334730224*^9}},
+ CellLabel->"In[14]:=",ExpressionUUID->"b7230eb1-8bce-407c-aaa7-b37782d035aa"],
+
+Cell[BoxData[
+ TagBox[
+  RowBox[{"{", "}"}],
+  Function[BoxForm`e$, 
+   TableForm[BoxForm`e$, TableHeadings -> {{}, {
+       $CellContext`\[CapitalPi][1], 
+       $CellContext`\[CapitalPi][2], 
+       $CellContext`\[CapitalPi][3]}}]]]], "Output",
+ CellChangeTimes->{3.937413347771516*^9, 3.937414735903578*^9},
+ CellLabel->
+  "Out[14]//TableForm=",ExpressionUUID->"32473ef1-d13d-4cb5-86b4-\
+0c3392028011"]
+}, Open  ]],
+
+Cell["\<\
+The problem is that only variables 5 and 6 involve mass units, so they must \
+always appear together in the same Pi group -- we cannot isolate them raised \
+to the first power in two different Pi groups.\
+\>", "Text",
+ CellChangeTimes->{{3.93741297597231*^9, 3.93741309054327*^9}, {
+  3.9374132216755543`*^9, 3.937413322896276*^9}, {3.9374133578745728`*^9, 
+  3.937413421233295*^9}, {3.9374135071169357`*^9, 
+  3.937413518043481*^9}},ExpressionUUID->"308cd324-495e-4f2f-a9be-\
+502c5ae65bf9"],
+
+Cell["\<\
+One of the most important features of dimensional analysis is that it can \
+rule out functional dependencies that cannot be expressed in a dimensionless \
+form (as nature insists they must).  For example, if we suppose that surface \
+tension is not important, such that we eliminate it from our hypothesis:\
+\>", "Text",
+ CellChangeTimes->{{3.93741297597231*^9, 3.93741309054327*^9}, {
+  3.9374132216755543`*^9, 3.937413322896276*^9}, {3.9374133578745728`*^9, 
+  3.937413421233295*^9}, {3.9374135071169357`*^9, 3.937413518043481*^9}, {
+  3.937413548879903*^9, 
+  3.9374136615851297`*^9}},ExpressionUUID->"fc78e95c-62dc-4f4e-ae41-\
+93cd81087b3f"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"sgw", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       SubscriptBox["c", "p"], ",", 
+       RowBox[{"\"\<Meters\>\"", "/", "\"\<Seconds\>\""}]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"\[Lambda]", ",", "\"\<Meters\>\""}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"g", ",", 
+       RowBox[{"\"\<Meters\>\"", "/", 
+        RowBox[{"\"\<Seconds\>\"", "^", "2"}]}]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"h", ",", "\"\<Meters\>\""}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"\[Rho]", ",", 
+       RowBox[{"\"\<Kilograms\>\"", "/", 
+        RowBox[{"\"\<Meters\>\"", "^", "3"}]}]}], "}"}]}], "}"}]}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.9374129578233852`*^9, 3.9374129580364943`*^9}, {
+  3.937413669301423*^9, 3.937413669597365*^9}},
+ CellLabel->"In[15]:=",ExpressionUUID->"8dc7f60e-f33b-4393-a362-73e653c69b1d"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"BuckPi", "[", "sgw", "]"}]], "Input",
+ CellChangeTimes->{{3.9374131083114758`*^9, 3.937413109102785*^9}, {
+  3.937413206671175*^9, 3.937413208659485*^9}},
+ CellLabel->"In[16]:=",ExpressionUUID->"ffe636f7-a276-440e-a729-5b3a9c65eeb3"],
+
+Cell[BoxData[
+ TagBox[
+  TagBox[GridBox[{
+     {
+      StyleBox["\[Null]",
+       ShowStringCharacters->False], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "1", "]"}],
+       HoldForm], 
+      TagBox[
+       RowBox[{"\[CapitalPi]", "[", "2", "]"}],
+       HoldForm]},
+     {
+      TagBox["1",
+       HoldForm], 
+      FractionBox[
+       SubscriptBox["c", "p"], 
+       RowBox[{
+        SqrtBox["g"], " ", 
+        SqrtBox["h"]}]], 
+      FractionBox["\[Lambda]", "h"]},
+     {
+      TagBox["2",
+       HoldForm], 
+      FractionBox[
+       SubscriptBox["c", "p"], 
+       RowBox[{
+        SqrtBox["g"], " ", 
+        SqrtBox["\[Lambda]"]}]], 
+      FractionBox["h", "\[Lambda]"]},
+     {
+      TagBox["3",
+       HoldForm], 
+      FractionBox["\[Lambda]", "h"], 
+      FractionBox[
+       RowBox[{"g", " ", "h"}], 
+       SubsuperscriptBox["c", "p", "2"]]},
+     {
+      TagBox["4",
+       HoldForm], 
+      FractionBox[
+       RowBox[{"g", " ", "\[Lambda]"}], 
+       SubsuperscriptBox["c", "p", "2"]], 
+      FractionBox[
+       RowBox[{"g", " ", "h"}], 
+       SubsuperscriptBox["c", "p", "2"]]},
+     {
+      TagBox["5",
+       HoldForm], 
+      FractionBox[
+       RowBox[{"g", " ", "\[Lambda]"}], 
+       SubsuperscriptBox["c", "p", "2"]], 
+      FractionBox["h", "\[Lambda]"]}
+    },
+    GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+    GridBoxDividers->{
+     "Columns" -> {False, True, {False}, False}, 
+      "Rows" -> {False, True, {False}, False}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[2.0999999999999996`]}, 
+        Offset[0.27999999999999997`]}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}}],
+   {OutputFormsDump`HeadedRows, OutputFormsDump`HeadedColumns}],
+  Function[BoxForm`e$, 
+   TableForm[BoxForm`e$, TableHeadings -> {{1, 2, 3, 4, 5}, {
+       $CellContext`\[CapitalPi][1], 
+       $CellContext`\[CapitalPi][2]}}]]]], "Output",
+ CellChangeTimes->{3.937413678323379*^9, 3.937414735916747*^9},
+ CellLabel->
+  "Out[16]//TableForm=",ExpressionUUID->"567cb7d3-758d-41cc-9b64-\
+9299dcd2b370"]
+}, Open  ]],
+
+Cell["\<\
+We see that none of the Pi groups involve the density, since there is nothing \
+to cancel its mass units in any of the other quantities.  Thus it is not \
+possible for the phase speed to depend on the density unless it also depends \
+on some other quantity involve mass units (such as the surface tension).  If \
+surface tension is unimportant, then there are just 2 Pi groups and density \
+is likewise unimportant.\
+\>", "Text",
+ CellChangeTimes->{{3.9374136834374228`*^9, 
+  3.9374137632998867`*^9}},ExpressionUUID->"1703de2b-063a-45e6-b40c-\
+23d754295356"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1358, 1130},
+WindowMargins->{{356, Automatic}, {Automatic, 68}},
+Magnification:>1.5 Inherited,
+FrontEndVersion->"13.2 for Mac OS X ARM (64-bit) (November 18, 2022)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"3b516b9c-0f8d-4ee4-84a7-2d5a290c3339"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 1758, 24, 146, "Title",ExpressionUUID->"a7698cbc-0131-489e-bf5d-3b625104c222"],
+Cell[2341, 48, 485, 11, 226, "Text",ExpressionUUID->"57644f09-dc44-40df-86dd-0742a9965d3e"],
+Cell[CellGroupData[{
+Cell[2851, 63, 162, 3, 101, "Section",ExpressionUUID->"2327e868-d1b7-4d8c-8fbd-8d530fe1a399"],
+Cell[3016, 68, 3457, 65, 743, "Text",ExpressionUUID->"c5bf6675-9a08-44ef-a4be-d736257e142a"],
+Cell[6476, 135, 10898, 248, 1008, "Input",ExpressionUUID->"3205ab66-a86c-4290-8f9e-d24640ff3744"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[17411, 388, 182, 3, 101, "Section",ExpressionUUID->"405c58c1-3b3b-473e-9e8a-81f9af4a82b5"],
+Cell[17596, 393, 228, 5, 53, "Text",ExpressionUUID->"d700ac46-19a4-4eea-8e46-7872e8b36fdb"],
+Cell[CellGroupData[{
+Cell[17849, 402, 512, 12, 46, "Input",ExpressionUUID->"48448ae9-8045-4ebd-ade1-bc04523fd186"],
+Cell[18364, 416, 464, 11, 55, "Output",ExpressionUUID->"9540790c-9d0c-4522-8315-520335fdda7f"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[18865, 432, 208, 3, 46, "Input",ExpressionUUID->"861c90eb-1484-47e6-a4d7-8849dd037ced"],
+Cell[19076, 437, 1242, 39, 146, "Output",ExpressionUUID->"d22f8398-f015-4466-a71b-db7a5348dae3"]
+}, Open  ]],
+Cell[20333, 479, 1504, 30, 330, "Text",ExpressionUUID->"c0da2cef-25da-4bc7-8aee-a6aa557647d8"],
+Cell[CellGroupData[{
+Cell[21862, 513, 707, 16, 46, "Input",ExpressionUUID->"ce2e2e2d-ed36-4ce9-8e79-13e8fcf8f24e"],
+Cell[22572, 531, 628, 15, 55, "Output",ExpressionUUID->"27e83d28-9a42-4f38-9ee2-42c38019cbf8"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[23237, 551, 207, 3, 46, "Input",ExpressionUUID->"95bc8760-fd01-4552-baf9-71bb1f4d0066"],
+Cell[23447, 556, 2022, 68, 228, "Output",ExpressionUUID->"4c6d974b-7eae-45c9-a2c2-e0eb352be4d8"]
+}, Open  ]],
+Cell[25484, 627, 1089, 18, 329, "Text",ExpressionUUID->"6d1b5e14-d16a-49b9-b5e6-190cb2e7c63a"],
+Cell[CellGroupData[{
+Cell[26598, 649, 260, 5, 46, "Input",ExpressionUUID->"0091cdf5-9fd6-43a7-9363-fef684f6ec2a"],
+Cell[26861, 656, 1711, 56, 188, "Output",ExpressionUUID->"1e75bf81-0206-4b82-9f02-26c858932147"]
+}, Open  ]],
+Cell[28587, 715, 244, 6, 53, "Text",ExpressionUUID->"7ee86add-d695-4d75-bfaa-efc119d5e3ba"],
+Cell[CellGroupData[{
+Cell[28856, 725, 336, 7, 46, "Input",ExpressionUUID->"bf6352be-86b1-42f6-9c0e-e0aff15ab2de"],
+Cell[29195, 734, 1544, 49, 148, "Output",ExpressionUUID->"27f4f243-0605-4b87-862e-71c1c0aae3d3"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[30776, 788, 346, 7, 46, "Input",ExpressionUUID->"0da55cfa-fa25-4d59-b3fb-31e29a3d4e8c"],
+Cell[31125, 797, 1379, 42, 110, "Output",ExpressionUUID->"d0274432-325b-45de-a837-d1f34dd8ab79"]
+}, Open  ]],
+Cell[32519, 842, 495, 9, 122, "Text",ExpressionUUID->"8e486ac6-7256-48e1-8251-1e9a66f01899"],
+Cell[CellGroupData[{
+Cell[33039, 855, 300, 6, 46, "Input",ExpressionUUID->"6af9f1ae-07cc-4491-9d37-4e31873f5b64"],
+Cell[33342, 863, 1384, 43, 110, "Output",ExpressionUUID->"99d51b87-90ad-440c-aad5-700036f8e305"]
+}, Open  ]],
+Cell[34741, 909, 766, 17, 295, "Text",ExpressionUUID->"e7da721a-e34e-4e09-a680-ee357e8f85aa"],
+Cell[CellGroupData[{
+Cell[35532, 930, 300, 6, 46, "Input",ExpressionUUID->"945978cc-0e70-432c-9d78-5ab582449682"],
+Cell[35835, 938, 562, 17, 73, "Output",ExpressionUUID->"a1c1fe38-6100-4091-87c6-cbb711cdf55f"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[36446, 961, 241, 4, 101, "Section",ExpressionUUID->"4b38e6e3-8021-43e7-ae79-7381177d47ce"],
+Cell[36690, 967, 466, 9, 122, "Text",ExpressionUUID->"98c11eeb-0cc6-45ac-b677-d68876fe297c"],
+Cell[37159, 978, 986, 26, 84, "Input",ExpressionUUID->"ba073084-a4fe-4b45-b2d2-77593a1fd7d1"],
+Cell[CellGroupData[{
+Cell[38170, 1008, 257, 4, 46, "Input",ExpressionUUID->"e4f2f1f2-f80f-4071-a64d-efabd85edf33"],
+Cell[38430, 1014, 6298, 214, 768, "Output",ExpressionUUID->"0822fb82-0886-47dd-89c8-dd7340c2008e"]
+}, Open  ]],
+Cell[44743, 1231, 510, 10, 88, "Text",ExpressionUUID->"f86425d6-4ceb-480a-ad6f-35d85a37f969"],
+Cell[CellGroupData[{
+Cell[45278, 1245, 287, 6, 46, "Input",ExpressionUUID->"b7230eb1-8bce-407c-aaa7-b37782d035aa"],
+Cell[45568, 1253, 405, 11, 73, "Output",ExpressionUUID->"32473ef1-d13d-4cb5-86b4-0c3392028011"]
+}, Open  ]],
+Cell[45988, 1267, 501, 9, 88, "Text",ExpressionUUID->"308cd324-495e-4f2f-a9be-502c5ae65bf9"],
+Cell[46492, 1278, 655, 11, 122, "Text",ExpressionUUID->"fc78e95c-62dc-4f4e-ae41-93cd81087b3f"],
+Cell[47150, 1291, 910, 24, 84, "Input",ExpressionUUID->"8dc7f60e-f33b-4393-a362-73e653c69b1d"],
+Cell[CellGroupData[{
+Cell[48085, 1319, 257, 4, 46, "Input",ExpressionUUID->"ffe636f7-a276-440e-a729-5b3a9c65eeb3"],
+Cell[48345, 1325, 2130, 73, 296, "Output",ExpressionUUID->"567cb7d3-758d-41cc-9b64-9299dcd2b370"]
+}, Open  ]],
+Cell[50490, 1401, 569, 10, 157, "Text",ExpressionUUID->"1703de2b-063a-45e6-b40c-23d754295356"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
