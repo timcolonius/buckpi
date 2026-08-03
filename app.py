@@ -22,6 +22,15 @@ UNIT_TIP = (
     "Examples: kg/m^3, N/m, Pa*s, slug/ft^3, lbf, psi, and mph. Prefixes, plurals, and mixed "
     "unit systems are allowed. BuckPi uses dimensionality only; it does not convert numerical values."
 )
+VARIABLE_TIP = (
+    r"Enter ordinary text or LaTeX-style notation. Examples: U, \rho, c_p, U_{\infty}, and \Delta p. "
+    "Greek commands, subscripts, and superscripts are supported."
+)
+REQUIRE_TIP = (
+    "By default BuckPi shows every admissible basis of independent Pi groups. Check one or more "
+    "boxes to restrict the table to bases in which each selected variable appears with exponent 1 "
+    "in a separate Pi group."
+)
 
 EDITED_EXAMPLE_STYLESHEET = """
 select, .bk-input { color: #9ca3af !important; font-style: italic !important; }
@@ -87,6 +96,14 @@ result = pn.Column(sizing_mode="stretch_width")
 def mark_example_edited(event=None):
     if not loading_example:
         example.stylesheets = [EDITED_EXAMPLE_STYLESHEET]
+        if result.objects:
+            result.styles = {
+                "opacity": "0.35",
+                "filter": "grayscale(1)",
+                "transition": "opacity 120ms ease",
+            }
+            calculate.name = "Recalculate dimensionless groups"
+            calculate.button_type = "warning"
 
 
 def update_preview(event, preview):
@@ -111,7 +128,6 @@ def make_row(name_value="", unit_value=""):
         name="Dimensions / units",
         value=unit_value,
         placeholder="e.g. kg/m^3",
-        description=UNIT_TIP,
         width=240,
     )
     require = pn.widgets.Checkbox(name="", value=False, width=165, align="center")
@@ -131,10 +147,28 @@ def make_row(name_value="", unit_value=""):
 
 
 def refresh_table():
+    variable_heading = pn.Row(
+        pn.pane.Markdown("**Variable**", width=120, margin=0),
+        pn.widgets.TooltipIcon(value=VARIABLE_TIP, width=20, margin=0),
+        width=150,
+        margin=(5, 10),
+    )
+    unit_heading = pn.Row(
+        pn.pane.Markdown("**Dimensions / units**", width=210, margin=0),
+        pn.widgets.TooltipIcon(value=UNIT_TIP, width=20, margin=0),
+        width=240,
+        margin=(5, 10),
+    )
+    exponent_heading = pn.Row(
+        pn.pane.Markdown("**Require exponent = 1**", width=135, margin=0),
+        pn.widgets.TooltipIcon(value=REQUIRE_TIP, width=20, margin=0),
+        width=165,
+        margin=(5, 10),
+    )
     heading = pn.Row(
-        pn.pane.Markdown("**Variable**", width=150),
-        pn.pane.Markdown("**Dimensions / units**", width=240),
-        pn.pane.Markdown("**Require exponent = 1**", width=165),
+        variable_heading,
+        unit_heading,
+        exponent_heading,
         pn.pane.Markdown("**Preview**", width=105),
         sizing_mode="stretch_width",
     )
@@ -220,6 +254,9 @@ def calculate_groups(event=None):
                 f'<div class="bkpi-error"><strong>Check the input:</strong> {escape(str(exc))}</div>'
             )
         ]
+    result.styles = {}
+    calculate.name = "Find dimensionless groups"
+    calculate.button_type = "primary"
 
 
 def clear_rows(event=None):
@@ -228,6 +265,9 @@ def clear_rows(event=None):
         unit.value = ""
         require.value = False
     result.objects = []
+    result.styles = {}
+    calculate.name = "Find dimensionless groups"
+    calculate.button_type = "primary"
     mark_example_edited()
 
 
@@ -246,10 +286,6 @@ app = pn.Column(
         '<code>\\rho</code>, <code>c_p</code>, <code>U_{\\infty}</code>, or <code>\\Delta p</code>. '
         'Enter units separately using expressions such as <code>m/s</code>, <code>kg/m^3</code>, '
         '<code>Pa*s</code>, or <code>N/m</code>. By default, every admissible set of &Pi; groups is shown.</p></div>'
-    ),
-    pn.pane.HTML(
-        '<details class="bkpi-card"><summary><strong>What unit inputs are accepted?</strong></summary>'
-        f'<p>{escape(UNIT_TIP)}</p></details>'
     ),
     table,
     calculate,
