@@ -69,7 +69,7 @@ body { background: var(--buck-pale); color: var(--buck-navy); }
   padding: 13px 18px;
 }
 .bkpi-intro p { margin: 0; }
-.bkpi-error { background:#e5f1f8; border-left:4px solid #174f75; padding:12px 16px; border-radius:6px; }
+.bkpi-error { background:#fff5f5; border-left:4px solid #b42318; color:#b42318; padding:12px 16px; border-radius:6px; }
 @media (max-width: 620px) {
   .bkpi-brand { gap: 14px; padding: 16px; }
   .bkpi-mark { transform: scale(0.86); transform-origin: left center; margin-right: -8px; }
