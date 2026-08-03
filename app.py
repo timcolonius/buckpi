@@ -37,27 +37,23 @@ body { background: var(--buck-pale); color: var(--buck-navy); }
   gap: 20px;
   padding: 18px 24px 20px;
 }
-.bkpi-mark { display: flex; align-items: center; gap: 8px; padding-left: 24px; position: relative; }
-.bkpi-mark::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  width: 18px;
-  height: 22px;
-  border-top: 2px solid var(--buck-mid);
-  border-bottom: 2px solid var(--buck-mid);
-  box-shadow: 0 -8px 0 -6px var(--buck-mid), 0 8px 0 -6px var(--buck-mid);
+.bkpi-mark {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  color: var(--buck-navy);
+  font-family: "STIX Two Math", "Cambria Math", Georgia, serif;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }
-.bkpi-mark span {
-  display: block;
-  width: 22px;
-  height: 22px;
-  transform: rotate(45deg);
-  border-radius: 3px;
-}
-.bkpi-mark span:nth-child(1) { background: #8bc0dc; }
-.bkpi-mark span:nth-child(2) { background: #3f8db7; }
-.bkpi-mark span:nth-child(3) { background: #0e5f91; }
+.bkpi-mark .bkpi-variable,
+.bkpi-mark .bkpi-alpha,
+.bkpi-mark .bkpi-pi { font-style: italic; }
+.bkpi-mark .bkpi-caret { color: #3f8db7; font-family: ui-monospace, monospace; font-size: 25px; }
+.bkpi-mark .bkpi-arrow { color: #6fa8c8; margin: 0 8px; }
+.bkpi-mark .bkpi-pi { color: #0e5f91; font-size: 34px; }
 .bkpi-brand h1 { color: var(--buck-navy); margin: 0; font-size: 34px; line-height: 1; }
 .bkpi-brand p { color: #52738a; margin: 5px 0 0; font-size: 14px; }
 .bkpi-intro {
@@ -408,7 +404,10 @@ app = pn.Column(
         '<div class="bkpi-banner">'
         '<div class="bkpi-banner-meta">Tim Colonius &middot; Caltech</div>'
         '<div class="bkpi-brand">'
-        '<div class="bkpi-mark" aria-hidden="true"><span></span><span></span><span></span></div>'
+        '<div class="bkpi-mark" aria-label="x to the alpha yields Pi">'
+        '<span class="bkpi-variable">x</span><span class="bkpi-caret">^</span>'
+        '<span class="bkpi-alpha">&alpha;</span><span class="bkpi-arrow">&rarr;</span>'
+        '<span class="bkpi-pi">&Pi;</span></div>'
         '<div><h1>BuckPi</h1><p>Dimensional analysis</p></div>'
         '</div></div>'
     ),
