@@ -2,7 +2,7 @@ from html import escape
 
 import panel as pn
 
-from buckpi import UnitError, analyze
+from buckpi import UnitError, analyze_options
 
 pn.extension(sizing_mode="stretch_width")
 
@@ -16,6 +16,10 @@ body { background: #f7f8f6; }
 .bkpi-card { background:white; border:1px solid #d9deda; border-radius:10px; padding:16px 18px; }
 .bkpi-result { background:#eef6f7; border-left:4px solid #176b87; border-radius:6px; padding:10px 16px; margin:8px 0; font-size:18px; }
 .bkpi-error { background:#fff0ee; border-left:4px solid #b44335; padding:12px 16px; border-radius:6px; }
+.bkpi-table { width:100%; border-collapse:collapse; background:white; }
+.bkpi-table th,.bkpi-table td { border:1px solid #cfd8d8; padding:10px 12px; text-align:left; white-space:nowrap; }
+.bkpi-table thead th { background:#176b87; color:white; }
+.bkpi-table tbody th { background:#eef6f7; color:#17212b; }
 """)
 
 EXAMPLES = {
@@ -29,7 +33,7 @@ rows = []
 for index in range(10):
     name = pn.widgets.TextInput(name=f"Variable {index + 1}", placeholder="e.g. U", width=150)
     unit = pn.widgets.TextInput(name="Dimensions / units", placeholder="e.g. m/s", width=240)
-    repeat = pn.widgets.Checkbox(name="Prefer as repeating", width=165)
+    repeat = pn.widgets.Checkbox(name="Require unit power", width=165)
     rows.append((name, unit, repeat))
 
 example = pn.widgets.Select(name="Load an example", options=list(EXAMPLES), value="Pendulum", width=280)
@@ -51,16 +55,20 @@ def calculate_groups(event=None):
     try:
         if any(not name.strip() or not unit.strip() for name, unit in variables):
             raise ValueError("Each row needs both a variable name and a unit expression")
-        answer = analyze(variables, preferred)
-        group_html = "".join(
-            f'<div class="bkpi-result"><strong>&Pi;<sub>{i}</sub></strong> = {escape(group.expression(list(answer.names)))}</div>'
-            for i, group in enumerate(answer.groups, 1)
-        )
-        repeats = ", ".join(map(escape, answer.repeating_variables)) or "none"
+        answers = analyze_options(variables, preferred)
+        answer = answers[0]
+        headings = "".join(f'<th>&Pi;<sub>{i}</sub></th>' for i in range(1, answer.group_count + 1))
+        rows_html = ""
+        for row_number, option in enumerate(answers, 1):
+            cells = "".join(f'<td>{escape(group.expression(list(option.names)))}</td>' for group in option.groups)
+            rows_html += f'<tr><th>{row_number}</th>{cells}</tr>'
         result.object = (
             f'<div class="bkpi-card"><h2>Result</h2><p>{len(answer.names)} variables, rank {answer.rank}: '
-            f'<strong>{answer.group_count} independent dimensionless group(s)</strong>.</p>{group_html}'
-            f'<p><small>Repeating variables used: {repeats}. Equivalent sets of &Pi; groups are possible.</small></p></div>'
+            f'<strong>{answer.group_count} independent dimensionless group(s)</strong>, shown in '
+            f'<strong>{len(answers)} admissible form(s)</strong>.</p>'
+            f'<div style="overflow-x:auto"><table class="bkpi-table"><thead><tr><th>Option</th>{headings}</tr></thead>'
+            f'<tbody>{rows_html}</tbody></table></div>'
+            f'<p><small>Each row is a complete independent set. Equivalent rows differ only in the chosen basis.</small></p></div>'
         )
     except (ValueError, UnitError) as exc:
         result.object = f'<div class="bkpi-error"><strong>Check the input:</strong> {escape(str(exc))}</div>'
@@ -77,14 +85,14 @@ calculate.on_click(calculate_groups)
 clear.on_click(clear_rows)
 
 table = pn.Column(
-    pn.Row(pn.pane.Markdown("**Variable**", width=150), pn.pane.Markdown("**Dimensions / units**", width=240), pn.pane.Markdown("**Repeating variable**", width=165)),
+    pn.Row(pn.pane.Markdown("**Variable**", width=150), pn.pane.Markdown("**Dimensions / units**", width=240), pn.pane.Markdown("**Unit power = 1**", width=165)),
     *[pn.Row(name, unit, repeat) for name, unit, repeat in rows],
 )
 
 app = pn.Column(
     pn.pane.HTML('<div class="bkpi-hero"><h1>BuckPi</h1><p>Dimensional analysis using the Buckingham &Pi; theorem</p></div>'),
     pn.Row(example, pn.Spacer(width=12), clear),
-    pn.pane.HTML('<div class="bkpi-card"><p>Enter each physical variable and its units. Use familiar expressions such as <code>m/s</code>, <code>kg/m^3</code>, <code>Pa*s</code>, or <code>N/m</code>. Optionally choose variables you prefer in the repeating set.</p></div>'),
+    pn.pane.HTML('<div class="bkpi-card"><p>Enter each physical variable and its units. Use familiar expressions such as <code>m/s</code>, <code>kg/m^3</code>, <code>Pa*s</code>, or <code>N/m</code>. By default, every admissible set of &Pi; groups is shown. Check “Require unit power” to restrict the table to forms where selected variables occur to the first power in separate groups.</p></div>'),
     table,
     calculate,
     result,

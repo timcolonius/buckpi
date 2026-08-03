@@ -5,9 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from fractions import Fraction
 from itertools import combinations
-from math import gcd
-from functools import reduce
-
 from .units import dimensions
 
 
@@ -78,20 +75,12 @@ def _solve(square, rhs):
     return [reduced[i][-1] for i in range(len(square))]
 
 
-def _normalize(values):
-    denominators = [v.denominator for v in values if v]
-    lcm = reduce(lambda a, b: a * b // gcd(a, b), denominators, 1)
-    integers = [int(v * lcm) for v in values]
-    common = reduce(gcd, (abs(v) for v in integers if v), 0) or 1
-    integers = [v // common for v in integers]
-    return tuple(Fraction(v) for v in integers)
-
-
-def analyze(variables, repeating=None) -> AnalysisResult:
-    """Find one set of independent Pi groups.
+def analyze_options(variables, unit_power=None) -> tuple[AnalysisResult, ...]:
+    """Find every admissible tabular representation of the Pi groups.
 
     ``variables`` is an iterable of ``(name, unit_expression)`` pairs.
-    ``repeating`` may contain variable names that should form the repeating set.
+    ``unit_power`` may contain variable names required to occur to the first
+    power in separate groups, corresponding to ``nonrep`` in ``Buck.nb``.
     """
     pairs = [(str(name).strip(), str(unit).strip()) for name, unit in variables]
     if len(pairs) < 2:
@@ -104,39 +93,59 @@ def analyze(variables, repeating=None) -> AnalysisResult:
     rank = _rank(matrix)
     if rank == 0:
         groups = tuple(PiGroup(tuple(Fraction(i == j) for i in range(len(names)))) for j in range(len(names)))
-        return AnalysisResult(tuple(names), rank, groups, ())
+        return (AnalysisResult(tuple(names), rank, groups, ()),)
 
-    requested = list(repeating or [])
+    requested = list(unit_power or [])
     unknown = [name for name in requested if name not in names]
     if unknown:
-        raise ValueError(f"Unknown repeating variable: {unknown[0]}")
-    if len(requested) > rank:
-        raise ValueError(f"Choose at most {rank} repeating variables")
+        raise ValueError(f"Unknown unit-power variable: {unknown[0]}")
+    group_count = len(names) - rank
+    if len(requested) > group_count:
+        raise ValueError(f"Choose at most {group_count} unit-power variables")
 
-    requested_indices = [names.index(name) for name in requested]
-    candidates = [i for i in range(len(names)) if i not in requested_indices]
-    repeat_indices = None
-    for extras in combinations(candidates, rank - len(requested_indices)):
-        trial = requested_indices + list(extras)
-        square = [[matrix[row][col] for col in trial] for row in range(7)]
-        if _rank(square) == rank:
-            repeat_indices = trial
-            break
-    if repeat_indices is None:
-        raise ValueError("The requested variables cannot form an independent repeating set")
-
-    active_rows = _rref([[matrix[row][col] for row in range(7)] for col in repeat_indices])[1]
-    square = [[matrix[row][col] for col in repeat_indices] for row in active_rows]
-    groups = []
-    for target in range(len(names)):
-        if target in repeat_indices:
+    requested_indices = {names.index(name) for name in requested}
+    options = []
+    for repeat_tuple in combinations(range(len(names)), rank):
+        repeat_indices = list(repeat_tuple)
+        targets = [index for index in range(len(names)) if index not in repeat_indices]
+        if not requested_indices.issubset(targets):
             continue
-        rhs = [-matrix[row][target] for row in active_rows]
-        powers = _solve(square, rhs)
-        exponents = [Fraction(0)] * len(names)
-        for index, power in zip(repeat_indices, powers):
-            exponents[index] = power
-        exponents[target] = 1
-        groups.append(PiGroup(_normalize(exponents)))
-    return AnalysisResult(tuple(names), rank, tuple(groups), tuple(names[i] for i in repeat_indices))
+        repeat_matrix = [[matrix[row][col] for col in repeat_indices] for row in range(7)]
+        if _rank(repeat_matrix) != rank:
+            continue
+        active_rows = _rref([[matrix[row][col] for row in range(7)] for col in repeat_indices])[1]
+        square = [[matrix[row][col] for col in repeat_indices] for row in active_rows]
+        groups = []
+        for target in targets:
+            rhs = [-matrix[row][target] for row in active_rows]
+            powers = _solve(square, rhs)
+            exponents = [Fraction(0)] * len(names)
+            for index, power in zip(repeat_indices, powers):
+                exponents[index] = power
+            exponents[target] = 1
+            groups.append(PiGroup(tuple(exponents)))
+        options.append(
+            AnalysisResult(
+                tuple(names), rank, tuple(groups), tuple(names[i] for i in repeat_indices)
+            )
+        )
+    if not options:
+        raise ValueError("No independent Pi-group set satisfies the requested unit-power variables")
+    return tuple(options)
 
+
+def analyze(variables, repeating=None) -> AnalysisResult:
+    """Return the first admissible representation (compatibility helper).
+
+    For the complete ``Buck.nb``-style table, use :func:`analyze_options`.
+    The legacy ``repeating`` argument still selects actual repeating variables.
+    """
+    if repeating:
+        pairs = list(variables)
+        repeating = list(repeating)
+        options = analyze_options(pairs)
+        for option in options:
+            if set(repeating).issubset(option.repeating_variables):
+                return option
+        raise ValueError("The requested variables cannot form an independent repeating set")
+    return analyze_options(variables)[0]

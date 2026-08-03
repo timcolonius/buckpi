@@ -7,20 +7,22 @@ Pyodide.
 ## Python use
 
 ```python
-from buckpi import analyze
+from buckpi import analyze_options
 
-result = analyze([
+options = analyze_options([
     ("T", "s"),
     ("L", "m"),
     ("g", "m/s^2"),
 ])
 
-for group in result.groups:
-    print(group.expression(list(result.names)))
+for option in options:
+    print([group.expression(list(option.names)) for group in option.groups])
 ```
 
-Unit expressions may use `*`, `/`, parentheses, and powers—for example `m/s`,
-`kg/m^3`, `Pa*s`, and `N/m`. Calculations use exact rational arithmetic.
+By default, `analyze_options` returns every admissible basis, matching the table
+produced by `Buck.nb`. Unit expressions may use `*`, `/`, parentheses, and
+powers—for example `m/s`, `kg/m^3`, `Pa*s`, and `N/m`. Calculations use exact
+rational arithmetic.
 
 ## Local development
 
@@ -46,4 +48,3 @@ GitHub Pages serves this project from `docs/`:
 Build the browser version with `scripts/build_static.sh`, commit `docs/app/`,
 then configure the repository's Pages source as the `main` branch `/docs`
 folder.
-
