@@ -39,21 +39,15 @@ body { background: var(--buck-pale); color: var(--buck-navy); }
 }
 .bkpi-mark {
   display: flex;
-  align-items: baseline;
-  gap: 2px;
+  align-items: center;
   color: var(--buck-navy);
   font-family: "STIX Two Math", "Cambria Math", Georgia, serif;
-  font-size: 30px;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
 }
-.bkpi-mark .bkpi-variable,
-.bkpi-mark .bkpi-alpha,
 .bkpi-mark .bkpi-pi { font-style: italic; }
-.bkpi-mark .bkpi-caret { color: #3f8db7; font-family: ui-monospace, monospace; font-size: 25px; }
-.bkpi-mark .bkpi-arrow { color: #6fa8c8; margin: 0 8px; }
-.bkpi-mark .bkpi-pi { color: #0e5f91; font-size: 34px; }
+.bkpi-mark .bkpi-pi { color: #0e5f91; font-size: 42px; }
 .bkpi-brand h1 { color: var(--buck-navy); margin: 0; font-size: 34px; line-height: 1; }
 .bkpi-brand p { color: #52738a; margin: 5px 0 0; font-size: 14px; }
 .bkpi-intro {
@@ -408,10 +402,7 @@ app = pn.Column(
         '<div class="bkpi-banner">'
         '<div class="bkpi-banner-meta">Tim Colonius &middot; Caltech</div>'
         '<div class="bkpi-brand">'
-        '<div class="bkpi-mark" aria-label="x to the alpha yields Pi">'
-        '<span class="bkpi-variable">x</span><span class="bkpi-caret">^</span>'
-        '<span class="bkpi-alpha">&alpha;</span><span class="bkpi-arrow">&rarr;</span>'
-        '<span class="bkpi-pi">&Pi;</span></div>'
+        '<div class="bkpi-mark" aria-label="Pi"><span class="bkpi-pi">&Pi;</span></div>'
         '<div><h1>BuckPi</h1><p>Dimensional analysis</p></div>'
         '</div></div>'
     ),
