@@ -112,6 +112,9 @@ HEADER_STYLE = {
     "padding": "10px 12px",
     "border": "1px solid #a9cadc",
     "font-weight": "600",
+    "display": "flex",
+    "align-items": "center",
+    "justify-content": "center",
 }
 OPTION_STYLE = {
     "background": "#e3f0f7",
@@ -120,6 +123,7 @@ OPTION_STYLE = {
     "font-weight": "600",
     "display": "flex",
     "align-items": "center",
+    "justify-content": "center",
 }
 MATH_CELL_STYLE = {
     "background": "white",
@@ -283,9 +287,12 @@ def result_table(answers):
     header = pn.Row(
         pn.pane.HTML("Option", width=80, styles=HEADER_STYLE),
         *[
-            pn.pane.HTML(f"&Pi;<sub>{i}</sub>", width=220, styles=HEADER_STYLE)
+            pn.pane.HTML(
+                f"&Pi;<sub>{i}</sub>", sizing_mode="stretch_width", styles=HEADER_STYLE
+            )
             for i in range(1, answer.group_count + 1)
         ],
+        sizing_mode="stretch_width",
     )
     option_rows = []
     for row_number, option in enumerate(answers, 1):
@@ -293,8 +300,8 @@ def result_table(answers):
             pn.pane.LaTeX(
                 r"$\displaystyle " + group.expression_latex(list(option.names)) + "$",
                 renderer="katex",
-                width=220,
                 height=76,
+                sizing_mode="stretch_width",
                 styles=MATH_CELL_STYLE,
             )
             for group in option.groups
@@ -303,12 +310,18 @@ def result_table(answers):
             pn.Row(
                 pn.pane.HTML(str(row_number), width=80, height=76, styles=OPTION_STYLE),
                 *cells,
+                sizing_mode="stretch_width",
             )
         )
     note = pn.pane.HTML(
         "<small>Each row is a complete independent set. Equivalent rows differ only in the chosen basis.</small>"
     )
-    grid = pn.Column(header, *option_rows, styles={"overflow-x": "auto"})
+    grid = pn.Column(
+        header,
+        *option_rows,
+        sizing_mode="stretch_width",
+        styles={"overflow-x": "auto"},
+    )
     return pn.Column(summary, grid, note, styles={"background": "white", "border": "1px solid #b9d4e4", "border-radius": "10px", "padding": "16px 18px"})
 
 
