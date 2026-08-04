@@ -172,6 +172,7 @@ def make_row(name_value="", unit_value="", is_output=False):
     row_id = str(next_row_id)
     name = pn.widgets.TextInput(
         name="Output variable" if is_output else "Input variable",
+        description=VARIABLE_TIP,
         value=name_value,
         value_input=name_value,
         placeholder=r"e.g. \rho",
@@ -179,6 +180,7 @@ def make_row(name_value="", unit_value="", is_output=False):
     )
     unit = pn.widgets.TextInput(
         name="Dimensions / units",
+        description=UNIT_TIP,
         value=unit_value,
         value_input=unit_value,
         placeholder="e.g. kg/m^3",
@@ -205,30 +207,6 @@ def make_row(name_value="", unit_value="", is_output=False):
     row_layout = pn.Row(*row_objects, sizing_mode="stretch_width")
     return row_id, name, unit, preview, remove, row_layout
 
-
-def table_heading(include_remove):
-    variable_heading = pn.Row(
-        pn.pane.Markdown("**Variable**", width=120, margin=0),
-        pn.widgets.TooltipIcon(value=VARIABLE_TIP, width=20, margin=0),
-        width=150,
-        margin=(5, 10),
-    )
-    unit_heading = pn.Row(
-        pn.pane.Markdown("**Dimensions / units**", width=210, margin=0),
-        pn.widgets.TooltipIcon(value=UNIT_TIP, width=20, margin=0),
-        width=240,
-        margin=(5, 10),
-    )
-    heading = pn.Row(
-        variable_heading,
-        unit_heading,
-        pn.pane.Markdown("**Preview**", width=105),
-        *([pn.Spacer(width=80, margin=(5, 10))] if include_remove else []),
-        sizing_mode="stretch_width",
-    )
-    return heading
-
-
 def refresh_table():
     if not rows:
         table.objects = []
@@ -244,7 +222,6 @@ def refresh_table():
     )
     variables_box = pn.Column(
         pn.pane.HTML("<h2>Variables</h2>"),
-        table_heading(True),
         output_group,
         input_group,
         styles=CARD_STYLES,
@@ -427,8 +404,9 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
     update_relationship()
     controls = pn.Row(
         repeating,
-        copy_button,
+        pn.Spacer(sizing_mode="stretch_width"),
         copy_status,
+        copy_button,
         sizing_mode="stretch_width",
         align="center",
     )
@@ -490,8 +468,8 @@ app = pn.Column(
         '</div></div>'
     ),
     pn.pane.HTML(
-        '<div class="bkpi-intro"><p>BuckPi expresses a physical output in terms of dimensionless '
-        'input groups using the Buckingham &Pi; theorem. Enter the output first, followed by its '
+        '<div class="bkpi-intro"><p>BuckPi expresses a physical input-output relation in terms of '
+        'dimensionless groups using the Buckingham &Pi; theorem. Enter the output first, followed by its '
         'inputs, then explore equivalent representations based on different repeating variables.</p></div>'
     ),
     pn.Row(example),
