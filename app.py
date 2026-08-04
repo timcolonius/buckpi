@@ -96,15 +96,9 @@ MATH_CELL_STYLE = {
     "border": "1px solid #b9d4e4",
     "box-sizing": "border-box",
 }
-OUTPUT_BOX_STYLES = {
-    "background": "#e8f3f9",
-    "border": "2px solid #126a9c",
-    "border-radius": "10px",
-    "padding": "10px 14px",
-}
-INPUT_BOX_STYLES = {
+CARD_STYLES = {
     "background": "white",
-    "border": "1px solid #b9d4e4",
+    "border": "2px solid #126a9c",
     "border-radius": "10px",
     "padding": "10px 14px",
 }
@@ -129,8 +123,8 @@ example = pn.widgets.Select(
     name="Load an example", options=list(EXAMPLES), value="Pendulum", width=280
 )
 add = pn.widgets.Button(name="+ Add input", button_type="light", width=110)
-table = pn.Column(sizing_mode="stretch_width")
-result = pn.Column(sizing_mode="stretch_width")
+table = pn.Column(sizing_mode="stretch_width", margin=(0, 10))
+result = pn.Column(sizing_mode="stretch_width", margin=(0, 10))
 
 
 def mark_example_edited(event=None):
@@ -156,9 +150,8 @@ def make_row(name_value="", unit_value="", is_output=False):
     global next_row_id
     next_row_id += 1
     row_id = str(next_row_id)
-    index = len(rows) + 1
     name = pn.widgets.TextInput(
-        name="Output variable" if is_output else f"Input {max(index - 1, 1)}",
+        name="Output variable" if is_output else "Input variable",
         value=name_value,
         value_input=name_value,
         placeholder=r"e.g. \rho",
@@ -220,23 +213,20 @@ def refresh_table():
     if not rows:
         table.objects = []
         return
-    rows[0][1].name = "Output variable"
-    for index, row in enumerate(rows[1:], 1):
-        row[1].name = f"Input {index}"
     output_box = pn.Column(
         pn.pane.HTML(
             "<h3>Output</h3><small>The first variable is the dependent output.</small>"
         ),
         table_heading(False),
         rows[0][5],
-        styles=OUTPUT_BOX_STYLES,
+        styles=CARD_STYLES,
     )
     inputs_box = pn.Column(
         pn.pane.HTML("<h3>Inputs</h3>"),
         table_heading(True),
         *[row[5] for row in rows[1:]],
         add,
-        styles=INPUT_BOX_STYLES,
+        styles=CARD_STYLES,
     )
     table.objects = [output_box, inputs_box]
 
@@ -269,7 +259,7 @@ def remove_row(target):
 
 RESULT_CARD_STYLES = {
     "background": "white",
-    "border": "1px solid #b9d4e4",
+    "border": "2px solid #126a9c",
     "border-radius": "10px",
     "padding": "16px 18px",
 }
