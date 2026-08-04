@@ -49,6 +49,19 @@ class BuckPiTests(unittest.TestCase):
         self.assertEqual(len(options), 1)
         self.assertEqual(options[0].groups[0].exponents[0], 1)
 
+    def test_output_appears_in_exactly_one_group(self):
+        variables = [
+            ("F", "N"), ("rho", "kg/m^3"), ("U", "m/s"),
+            ("L", "m"), ("mu", "Pa*s"),
+        ]
+        options = analyze_options(variables, unit_power=["F"])
+        self.assertEqual(len(options), 4)
+        for option in options:
+            self.assertNotIn("F", option.repeating_variables)
+            output_powers = [group.exponents[0] for group in option.groups]
+            self.assertEqual(output_powers.count(1), 1)
+            self.assertEqual(output_powers.count(0), option.group_count - 1)
+
     def test_sphere(self):
         result = analyze([("V", "m^3"), ("R", "m")], repeating=["R"])
         self.assertEqual(result.groups[0].exponents, (Fraction(1), Fraction(-3)))

@@ -4,6 +4,11 @@ BuckPi is a Python implementation of the Buckingham Pi dimensional-analysis
 tool, with an interactive Panel app that runs entirely in the browser through
 Pyodide.
 
+The browser app uses an output-first presentation: choose one dependent
+variable, then select among admissible sets of repeating input variables. The
+result separates the output Pi group from input-only groups and writes the
+relationship as `Pi_0 = Phi(Pi_1, ...)`.
+
 ## Python use
 
 ```python
