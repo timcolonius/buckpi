@@ -141,13 +141,21 @@ CHOICE_CHIP_INACTIVE_STYLES = {
     "cursor": "pointer",
 }
 CHOICE_LABEL_ACTIVE_STYLES = {
+    "display": "flex",
+    "align-items": "center",
+    "justify-content": "center",
     "font-size": "16px",
+    "line-height": "1",
     "text-align": "center",
     "color": "white",
     "pointer-events": "none",
 }
 CHOICE_LABEL_INACTIVE_STYLES = {
+    "display": "flex",
+    "align-items": "center",
+    "justify-content": "center",
     "font-size": "16px",
+    "line-height": "1",
     "text-align": "center",
     "color": "#0b2d4d",
     "pointer-events": "none",
@@ -478,7 +486,7 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
             "$" + math_label + "$",
             renderer="katex",
             width=chip_width,
-            height=24,
+            height=38,
             sizing_mode="fixed",
             margin=0,
             styles=CHOICE_LABEL_INACTIVE_STYLES,
