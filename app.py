@@ -60,6 +60,26 @@ body { background: var(--buck-pale); color: var(--buck-navy); }
 }
 .bkpi-intro p { margin: 0; }
 .bkpi-error { background:#fff5f5; border-left:4px solid #b42318; color:#b42318; padding:12px 16px; border-radius:6px; }
+.bkpi-variable-group {
+  position: relative;
+  border: 1px solid var(--buck-line);
+  border-radius: 8px;
+  padding: 18px 12px 10px;
+  margin-top: 12px;
+}
+.bkpi-variable-group::before {
+  position: absolute;
+  top: -0.72em;
+  left: 14px;
+  padding: 0 7px;
+  background: white;
+  color: var(--buck-blue);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.bkpi-output-group::before { content: "Output"; }
+.bkpi-input-group::before { content: "Input"; }
 @media (max-width: 620px) {
   .bkpi-brand { gap: 14px; padding: 16px; }
   .bkpi-mark { transform: scale(0.86); transform-origin: left center; margin-right: -8px; }
@@ -123,7 +143,7 @@ example = pn.widgets.Select(
     name="Load an example", options=list(EXAMPLES), value="Pendulum", width=280
 )
 add = pn.widgets.Button(name="+ Add input", button_type="light", width=110)
-table = pn.Column(sizing_mode="stretch_width", margin=(0, 10))
+table = pn.Column(sizing_mode="stretch_width", margin=(0, 10, 16, 10))
 result = pn.Column(sizing_mode="stretch_width", margin=(0, 10))
 
 
@@ -213,22 +233,23 @@ def refresh_table():
     if not rows:
         table.objects = []
         return
-    output_box = pn.Column(
-        pn.pane.HTML(
-            "<h3>Output</h3><small>The first variable is the dependent output.</small>"
-        ),
-        table_heading(False),
+    output_group = pn.Column(
         rows[0][5],
-        styles=CARD_STYLES,
+        css_classes=["bkpi-variable-group", "bkpi-output-group"],
     )
-    inputs_box = pn.Column(
-        pn.pane.HTML("<h3>Inputs</h3>"),
-        table_heading(True),
+    input_group = pn.Column(
         *[row[5] for row in rows[1:]],
         add,
+        css_classes=["bkpi-variable-group", "bkpi-input-group"],
+    )
+    variables_box = pn.Column(
+        pn.pane.HTML("<h2>Variables</h2>"),
+        table_heading(True),
+        output_group,
+        input_group,
         styles=CARD_STYLES,
     )
-    table.objects = [output_box, inputs_box]
+    table.objects = [variables_box]
 
 
 def load_example(event=None):
@@ -411,16 +432,10 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
         sizing_mode="stretch_width",
         align="center",
     )
-    note = pn.pane.HTML(
-        "<small>The output appears only in &Pi;<sub>0</sub>. Choose another independent "
-        "repeating-variable set to obtain an equivalent representation. Different sets may "
-        "produce identical or algebraically equivalent groups.</small>"
-    )
     return pn.Column(
         summary,
         controls,
         active,
-        note,
         clipboard_source,
         sizing_mode="stretch_width",
         styles=RESULT_CARD_STYLES,
