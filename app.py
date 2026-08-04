@@ -1,4 +1,5 @@
 from html import escape
+import re
 
 import panel as pn
 
@@ -139,6 +140,19 @@ CHOICE_CHIP_INACTIVE_STYLES = {
     "color": "#0b2d4d",
     "cursor": "pointer",
 }
+
+
+def repeating_choice_width(names):
+    """Estimate the rendered math width without counting LaTeX command text."""
+    if not names:
+        return 74
+    width = 24 + 12 * (len(names) - 1)
+    for name in names:
+        latex = symbol_latex(name)
+        glyphs = re.sub(r"\\[A-Za-z]+", "x", latex)
+        glyphs = re.sub(r"[{}_^\\\s]", "", glyphs)
+        width += max(20, 10 * len(glyphs) + 10)
+    return max(74, min(230, width))
 
 EXAMPLES = {
     "Sphere volume": [("V", "m^3"), ("R", "m")],
@@ -424,12 +438,13 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
             r",\;".join(symbol_latex(name) for name in option.repeating_variables)
             or r"\mathrm{None}"
         )
-        chip_width = max(74, min(190, 24 + 10 * len(label)))
+        chip_width = repeating_choice_width(option.repeating_variables)
         button = pn.widgets.Button(
             name=label,
             button_type="light",
             width=chip_width,
             height=38,
+            sizing_mode="fixed",
             margin=0,
             styles={
                 "position": "absolute",
@@ -448,6 +463,7 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
                     renderer="katex",
                     width=chip_width,
                     height=38,
+                    sizing_mode="fixed",
                     margin=0,
                     styles={
                         "font-size": "16px",
@@ -460,6 +476,7 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
                 button,
                 width=chip_width,
                 height=38,
+                sizing_mode="fixed",
                 margin=0,
                 styles=CHOICE_CHIP_INACTIVE_STYLES,
                 css_classes=["bkpi-math-chip"],
@@ -480,7 +497,6 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
     update_relationship()
     controls = pn.Row(
         repeating,
-        pn.Spacer(sizing_mode="stretch_width"),
         copy_status,
         copy_button,
         sizing_mode="stretch_width",
