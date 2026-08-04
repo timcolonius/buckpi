@@ -509,7 +509,7 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
         )
 
     repeating = pn.Column(
-        pn.pane.Markdown("**Repeating variables**", margin=(0, 0, 4, 0)),
+        pn.pane.Markdown("**Choose Repeating Variables**", margin=(0, 0, 4, 0)),
         pn.FlexBox(
             *choice_chips,
             flex_wrap="wrap",
