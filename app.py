@@ -80,6 +80,7 @@ body { background: var(--buck-pale); color: var(--buck-navy); }
 }
 .bkpi-output-group::before { content: "Output"; }
 .bkpi-input-group::before { content: "Input"; }
+.bkpi-math-chip { transition: background-color 120ms ease, border-color 120ms ease; }
 @media (max-width: 620px) {
   .bkpi-brand { gap: 14px; padding: 16px; }
   .bkpi-mark { transform: scale(0.86); transform-origin: left center; margin-right: -8px; }
@@ -121,6 +122,22 @@ CARD_STYLES = {
     "border": "2px solid #126a9c",
     "border-radius": "10px",
     "padding": "10px 14px",
+}
+CHOICE_CHIP_ACTIVE_STYLES = {
+    "position": "relative",
+    "background": "#126a9c",
+    "border": "1px solid #126a9c",
+    "border-radius": "6px",
+    "color": "white",
+    "cursor": "pointer",
+}
+CHOICE_CHIP_INACTIVE_STYLES = {
+    "position": "relative",
+    "background": "#e8f3f9",
+    "border": "1px solid #b9d4e4",
+    "border-radius": "6px",
+    "color": "#0b2d4d",
+    "cursor": "pointer",
 }
 
 EXAMPLES = {
@@ -388,29 +405,71 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
     )
     active = pn.Column(sizing_mode="stretch_width")
     choice_buttons = []
+    choice_chips = []
 
     def update_relationship(index=0):
         selected = answers[index]
         active.objects = [relationship_view(selected, output_name)]
         clipboard_source.value = relationship_latex(selected, output_name)
-        for choice_index, button in enumerate(choice_buttons):
-            button.button_type = "primary" if choice_index == index else "light"
+        for choice_index, chip in enumerate(choice_chips):
+            chip.styles = (
+                CHOICE_CHIP_ACTIVE_STYLES
+                if choice_index == index
+                else CHOICE_CHIP_INACTIVE_STYLES
+            )
 
     for index, option in enumerate(answers):
         label = ", ".join(option.repeating_variables) or "None"
+        math_label = (
+            r",\;".join(symbol_latex(name) for name in option.repeating_variables)
+            or r"\mathrm{None}"
+        )
+        chip_width = max(74, min(190, 24 + 10 * len(label)))
         button = pn.widgets.Button(
             name=label,
             button_type="light",
-            height=34,
-            width=max(74, min(190, 18 + 9 * len(label))),
+            width=chip_width,
+            height=38,
+            margin=0,
+            styles={
+                "position": "absolute",
+                "inset": "0",
+                "z-index": "2",
+                "opacity": "0",
+                "cursor": "pointer",
+            },
         )
         button.on_click(lambda event, selected=index: update_relationship(selected))
         choice_buttons.append(button)
+        choice_chips.append(
+            pn.Column(
+                pn.pane.LaTeX(
+                    "$" + math_label + "$",
+                    renderer="katex",
+                    width=chip_width,
+                    height=38,
+                    margin=0,
+                    styles={
+                        "font-size": "16px",
+                        "text-align": "center",
+                        "padding": "7px 10px",
+                        "box-sizing": "border-box",
+                        "pointer-events": "none",
+                    },
+                ),
+                button,
+                width=chip_width,
+                height=38,
+                margin=0,
+                styles=CHOICE_CHIP_INACTIVE_STYLES,
+                css_classes=["bkpi-math-chip"],
+            )
+        )
 
     repeating = pn.Column(
         pn.pane.Markdown("**Repeating variables**", margin=(0, 0, 4, 0)),
         pn.FlexBox(
-            *choice_buttons,
+            *choice_chips,
             flex_wrap="wrap",
             gap="8px",
             sizing_mode="stretch_width",
