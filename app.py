@@ -140,6 +140,18 @@ CHOICE_CHIP_INACTIVE_STYLES = {
     "color": "#0b2d4d",
     "cursor": "pointer",
 }
+CHOICE_LABEL_ACTIVE_STYLES = {
+    "font-size": "16px",
+    "text-align": "center",
+    "color": "white",
+    "pointer-events": "none",
+}
+CHOICE_LABEL_INACTIVE_STYLES = {
+    "font-size": "16px",
+    "text-align": "center",
+    "color": "#0b2d4d",
+    "pointer-events": "none",
+}
 
 
 def repeating_choice_width(names):
@@ -420,6 +432,7 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
     active = pn.Column(sizing_mode="stretch_width")
     choice_buttons = []
     choice_chips = []
+    choice_labels = []
 
     def update_relationship(index=0):
         selected = answers[index]
@@ -430,6 +443,11 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
                 CHOICE_CHIP_ACTIVE_STYLES
                 if choice_index == index
                 else CHOICE_CHIP_INACTIVE_STYLES
+            )
+            choice_labels[choice_index].styles = (
+                CHOICE_LABEL_ACTIVE_STYLES
+                if choice_index == index
+                else CHOICE_LABEL_INACTIVE_STYLES
             )
 
     for index, option in enumerate(answers):
@@ -456,20 +474,27 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
         )
         button.on_click(lambda event, selected=index: update_relationship(selected))
         choice_buttons.append(button)
+        math_pane = pn.pane.LaTeX(
+            "$" + math_label + "$",
+            renderer="katex",
+            width=chip_width,
+            height=24,
+            sizing_mode="fixed",
+            margin=0,
+            styles=CHOICE_LABEL_INACTIVE_STYLES,
+        )
+        choice_labels.append(math_pane)
         choice_chips.append(
             pn.Column(
-                pn.pane.LaTeX(
-                    "$" + math_label + "$",
-                    renderer="katex",
+                pn.FlexBox(
+                    math_pane,
                     width=chip_width,
                     height=38,
                     sizing_mode="fixed",
                     margin=0,
+                    align_items="center",
+                    justify_content="center",
                     styles={
-                        "font-size": "16px",
-                        "text-align": "center",
-                        "padding": "7px 10px",
-                        "box-sizing": "border-box",
                         "pointer-events": "none",
                     },
                 ),
@@ -501,6 +526,7 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
         copy_button,
         sizing_mode="stretch_width",
         align="center",
+        margin=(0, 0, 12, 0),
     )
     return pn.Column(
         summary,
