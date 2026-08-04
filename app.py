@@ -361,13 +361,6 @@ def relationship_result(answers, output_name):
         f'<strong>{answer.group_count} independent dimensionless {group_word}</strong> and '
         f'<strong>{len(answers)} repeating-variable {choice_word}</strong>.</p>'
     )
-    choices = {
-        ", ".join(option.repeating_variables) or "None": index
-        for index, option in enumerate(answers)
-    }
-    repeating = pn.widgets.Select(
-        name="Repeating variables", options=choices, value=0, width=360
-    )
     clipboard_source = pn.widgets.TextAreaInput(visible=False)
     copy_button = pn.widgets.Button(
         name="Copy LaTeX", button_type="primary", width=110
@@ -394,13 +387,37 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
 """,
     )
     active = pn.Column(sizing_mode="stretch_width")
+    choice_buttons = []
 
-    def update_relationship(event=None):
-        selected = answers[repeating.value]
+    def update_relationship(index=0):
+        selected = answers[index]
         active.objects = [relationship_view(selected, output_name)]
         clipboard_source.value = relationship_latex(selected, output_name)
+        for choice_index, button in enumerate(choice_buttons):
+            button.button_type = "primary" if choice_index == index else "light"
 
-    repeating.param.watch(update_relationship, "value")
+    for index, option in enumerate(answers):
+        label = ", ".join(option.repeating_variables) or "None"
+        button = pn.widgets.Button(
+            name=label,
+            button_type="light",
+            height=34,
+            width=max(74, min(190, 18 + 9 * len(label))),
+        )
+        button.on_click(lambda event, selected=index: update_relationship(selected))
+        choice_buttons.append(button)
+
+    repeating = pn.Column(
+        pn.pane.Markdown("**Repeating variables**", margin=(0, 0, 4, 0)),
+        pn.FlexBox(
+            *choice_buttons,
+            flex_wrap="wrap",
+            gap="8px",
+            sizing_mode="stretch_width",
+        ),
+        sizing_mode="stretch_width",
+        margin=0,
+    )
     update_relationship()
     controls = pn.Row(
         repeating,
