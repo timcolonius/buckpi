@@ -77,11 +77,6 @@ VARIABLE_TIP = (
     r"Enter ordinary text or LaTeX-style notation. Examples: U, \rho, c_p, U_{\infty}, and \Delta p. "
     "Greek commands, subscripts, and superscripts are supported."
 )
-OUTPUT_TIP = (
-    "Choose the dependent variable. It appears to exponent 1 in the output Pi group and is "
-    "excluded from the input-only Pi groups."
-)
-
 EDITED_EXAMPLE_STYLESHEET = """
 select, .bk-input { color: #7794a8 !important; font-style: italic !important; }
 """
@@ -101,6 +96,18 @@ MATH_CELL_STYLE = {
     "border": "1px solid #b9d4e4",
     "box-sizing": "border-box",
 }
+OUTPUT_BOX_STYLES = {
+    "background": "#e8f3f9",
+    "border": "2px solid #126a9c",
+    "border-radius": "10px",
+    "padding": "10px 14px",
+}
+INPUT_BOX_STYLES = {
+    "background": "white",
+    "border": "1px solid #b9d4e4",
+    "border-radius": "10px",
+    "padding": "10px 14px",
+}
 
 EXAMPLES = {
     "Sphere volume": [("V", "m^3"), ("R", "m")],
@@ -114,23 +121,14 @@ EXAMPLES = {
         (r"\rho", "kg/m^3"), (r"\sigma", "N/m"),
     ],
 }
-EXAMPLE_OUTPUT_INDEX = {
-    "Sphere volume": 0,
-    "Pendulum": 0,
-    "Drag force": 0,
-    "Surface gravity waves": 0,
-}
-
 rows = []
 loading_example = False
-updating_output = False
 next_row_id = 0
 
 example = pn.widgets.Select(
     name="Load an example", options=list(EXAMPLES), value="Pendulum", width=280
 )
-output = pn.widgets.Select(name="Output variable", options={}, width=240)
-add = pn.widgets.Button(name="+ Add row", button_type="light", width=110)
+add = pn.widgets.Button(name="+ Add input", button_type="light", width=110)
 table = pn.Column(sizing_mode="stretch_width")
 result = pn.Column(sizing_mode="stretch_width")
 
@@ -138,28 +136,7 @@ result = pn.Column(sizing_mode="stretch_width")
 def mark_example_edited(event=None):
     if not loading_example:
         example.stylesheets = [EDITED_EXAMPLE_STYLESHEET]
-        update_output_options()
         calculate_groups()
-
-
-def output_changed(event=None):
-    if not loading_example and not updating_output:
-        example.stylesheets = [EDITED_EXAMPLE_STYLESHEET]
-        calculate_groups()
-
-
-def update_output_options(preferred=None):
-    global updating_output
-    updating_output = True
-    current = preferred if preferred is not None else output.value
-    options = {
-        f"{index}. {name.value_input.strip() or 'Unnamed variable'}": row_id
-        for index, (row_id, name, _, _, _, _) in enumerate(rows, 1)
-    }
-    output.options = options
-    values = list(options.values())
-    output.value = current if current in values else (values[0] if values else None)
-    updating_output = False
 
 
 def update_preview(event, preview):
@@ -175,13 +152,13 @@ def update_preview(event, preview):
         preview.styles = PREVIEW_ERROR_STYLE
 
 
-def make_row(name_value="", unit_value=""):
+def make_row(name_value="", unit_value="", is_output=False):
     global next_row_id
     next_row_id += 1
     row_id = str(next_row_id)
     index = len(rows) + 1
     name = pn.widgets.TextInput(
-        name=f"Variable {index}",
+        name="Output variable" if is_output else f"Input {max(index - 1, 1)}",
         value=name_value,
         value_input=name_value,
         placeholder=r"e.g. \rho",
@@ -194,7 +171,9 @@ def make_row(name_value="", unit_value=""):
         placeholder="e.g. kg/m^3",
         width=240,
     )
-    remove = pn.widgets.Button(name="Remove", button_type="light", width=80, align="center")
+    remove = None if is_output else pn.widgets.Button(
+        name="Remove", button_type="light", width=80, align="center"
+    )
     preview_text = "$" + symbol_latex(name_value) + "$" if name_value else r"$\text{preview}$"
     preview = pn.pane.LaTeX(
         preview_text,
@@ -206,12 +185,15 @@ def make_row(name_value="", unit_value=""):
     name.param.watch(lambda event, pane=preview: update_preview(event, pane), "value_input")
     name.param.watch(mark_example_edited, "value_input")
     unit.param.watch(mark_example_edited, "value_input")
-    remove.on_click(lambda event, target=row_id: remove_row(target))
-    row_layout = pn.Row(name, unit, preview, remove, sizing_mode="stretch_width")
+    row_objects = [name, unit, preview]
+    if remove is not None:
+        remove.on_click(lambda event, target=row_id: remove_row(target))
+        row_objects.append(remove)
+    row_layout = pn.Row(*row_objects, sizing_mode="stretch_width")
     return row_id, name, unit, preview, remove, row_layout
 
 
-def refresh_table():
+def table_heading(include_remove):
     variable_heading = pn.Row(
         pn.pane.Markdown("**Variable**", width=120, margin=0),
         pn.widgets.TooltipIcon(value=VARIABLE_TIP, width=20, margin=0),
@@ -228,20 +210,44 @@ def refresh_table():
         variable_heading,
         unit_heading,
         pn.pane.Markdown("**Preview**", width=105),
-        pn.Spacer(width=80, margin=(5, 10)),
+        *([pn.Spacer(width=80, margin=(5, 10))] if include_remove else []),
         sizing_mode="stretch_width",
     )
-    table.objects = [heading, *[row[5] for row in rows], add]
+    return heading
+
+
+def refresh_table():
+    if not rows:
+        table.objects = []
+        return
+    rows[0][1].name = "Output variable"
+    for index, row in enumerate(rows[1:], 1):
+        row[1].name = f"Input {index}"
+    output_box = pn.Column(
+        pn.pane.HTML(
+            "<h3>Output</h3><small>The first variable is the dependent output.</small>"
+        ),
+        table_heading(False),
+        rows[0][5],
+        styles=OUTPUT_BOX_STYLES,
+    )
+    inputs_box = pn.Column(
+        pn.pane.HTML("<h3>Inputs</h3>"),
+        table_heading(True),
+        *[row[5] for row in rows[1:]],
+        add,
+        styles=INPUT_BOX_STYLES,
+    )
+    table.objects = [output_box, inputs_box]
 
 
 def load_example(event=None):
     global loading_example
     loading_example = True
     rows.clear()
-    for name_value, unit_value in EXAMPLES[example.value]:
-        rows.append(make_row(name_value, unit_value))
+    for index, (name_value, unit_value) in enumerate(EXAMPLES[example.value]):
+        rows.append(make_row(name_value, unit_value, is_output=(index == 0)))
     refresh_table()
-    update_output_options(rows[EXAMPLE_OUTPUT_INDEX[example.value]][0])
     example.stylesheets = []
     loading_example = False
     calculate_groups()
@@ -254,6 +260,8 @@ def add_row(event=None):
 
 
 def remove_row(target):
+    if rows and rows[0][0] == target:
+        return
     rows[:] = [row for row in rows if row[0] != target]
     refresh_table()
     mark_example_edited()
@@ -296,11 +304,6 @@ def relationship_latex(answer, output_name):
         rf"\Pi_{{{index}}} &= " + group.expression_latex(list(answer.names))
         for index, group in enumerate(input_groups, 1)
     )
-    if input_groups:
-        arguments = ", ".join(rf"\Pi_{{{index}}}" for index in range(1, len(input_groups) + 1))
-        lines.append(rf"\Pi_{{0}} &= \Phi\left({arguments}\right)")
-    else:
-        lines.append(r"\Pi_{0} &= \mathrm{constant}")
     return r"\begin{aligned}" + "\n" + (r" \\" + "\n").join(lines) + "\n" + r"\end{aligned}"
 
 
@@ -347,19 +350,6 @@ def relationship_view(answer, output_name):
                 styles=RELATIONSHIP_SECTION_STYLES,
             )
         )
-        arguments = ", ".join(
-            rf"\Pi_{{{index}}}" for index in range(1, len(input_groups) + 1)
-        )
-        relationship = rf"\Pi_{{0}} = \Phi\left({arguments}\right)"
-    else:
-        relationship = r"\Pi_{0} = \mathrm{constant}"
-    sections.append(
-        pn.Column(
-            pn.pane.HTML("<h3>Relationship</h3>"),
-            centered_math(relationship),
-            styles=RELATIONSHIP_SECTION_STYLES,
-        )
-    )
     return pn.Column(*sections, sizing_mode="stretch_width")
 
 
@@ -433,7 +423,8 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
     )
     note = pn.pane.HTML(
         "<small>The output appears only in &Pi;<sub>0</sub>. Choose another independent "
-        "repeating-variable set to obtain an equivalent representation.</small>"
+        "repeating-variable set to obtain an equivalent representation. Different sets may "
+        "produce identical or algebraically equivalent groups.</small>"
     )
     return pn.Column(
         summary,
@@ -455,9 +446,9 @@ def calculate_groups(event=None):
     try:
         if any(not name.strip() or not unit.strip() for name, unit in variables):
             raise ValueError("Each row needs both a variable name and a unit expression")
-        output_row = next((row for row in rows if row[0] == output.value), None)
+        output_row = rows[0] if rows else None
         if output_row is None or not output_row[1].value_input.strip():
-            raise ValueError("Choose a named output variable")
+            raise ValueError("Enter a name for the output variable")
         output_name = output_row[1].value_input.strip()
         baseline = analyze_options(variables)
         if baseline[0].group_count == 0:
@@ -482,7 +473,6 @@ def calculate_groups(event=None):
 
 
 example.param.watch(load_example, "value")
-output.param.watch(output_changed, "value")
 add.on_click(add_row)
 
 app = pn.Column(
@@ -496,14 +486,10 @@ app = pn.Column(
     ),
     pn.pane.HTML(
         '<div class="bkpi-intro"><p>BuckPi expresses a physical output in terms of dimensionless '
-        'input groups using the Buckingham &Pi; theorem. Choose an output, then explore equivalent '
-        'representations based on different repeating variables.</p></div>'
+        'input groups using the Buckingham &Pi; theorem. Enter the output first, followed by its '
+        'inputs, then explore equivalent representations based on different repeating variables.</p></div>'
     ),
-    pn.Row(
-        example,
-        output,
-        pn.widgets.TooltipIcon(value=OUTPUT_TIP, width=20, margin=(27, 0, 0, 0)),
-    ),
+    pn.Row(example),
     table,
     result,
     pn.pane.Markdown(
