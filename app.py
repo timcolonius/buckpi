@@ -3,7 +3,9 @@ import re
 
 import panel as pn
 
-from buckpi import SymbolError, UnitError, analyze_options, symbol_latex
+from buckpi import (
+    SymbolError, UnitError, analyze_options, distinct_options, symbol_latex,
+)
 
 pn.extension("katex", sizing_mode="stretch_width")
 
@@ -260,8 +262,8 @@ def make_row(name_value="", unit_value=""):
         isolate,
         pn.widgets.TooltipIcon(value=ISOLATE_TIP, width=20, margin=0),
         width=105,
-        height=42,
-        margin=(5, 10),
+        height=38,
+        margin=(23, 10, 0, 10),
         styles={"display": "flex", "align-items": "center", "justify-content": "center"},
     )
     remove = pn.widgets.Button(name="Remove", button_type="light", width=80, align="center")
@@ -543,7 +545,7 @@ def calculate_groups(event=None):
             raise ValueError("Each row needs both a variable name and a unit expression")
         if not variables:
             raise ValueError("Enter at least one variable and unit expression")
-        baseline = analyze_options(variables)
+        baseline = distinct_options(analyze_options(variables))
         answer = baseline[0]
         limit = answer.group_count
         update_isolate_controls(limit)
@@ -556,7 +558,10 @@ def calculate_groups(event=None):
             '<div class="bkpi-rank"><strong>Dimension-matrix rank:</strong> '
             f'{answer.rank} &middot; <strong>Isolation limit:</strong> {limit}</div>'
         )
-        answers = analyze_options(variables, isolated) if isolated else baseline
+        answers = (
+            distinct_options(analyze_options(variables, isolated))
+            if isolated else baseline
+        )
         result.objects = [result_panel(answers)]
     except (ValueError, UnitError, SymbolError) as exc:
         rank_indicator.object = (

@@ -2,8 +2,8 @@ import unittest
 from fractions import Fraction
 
 from buckpi import (
-    SymbolError, UnitError, analyze, analyze_options, dimensions, symbol_html,
-    symbol_latex,
+    SymbolError, UnitError, analyze, analyze_options, dimensions,
+    distinct_options, symbol_html, symbol_latex,
 )
 
 
@@ -61,6 +61,18 @@ class BuckPiTests(unittest.TestCase):
             output_powers = [group.exponents[0] for group in option.groups]
             self.assertEqual(output_powers.count(1), 1)
             self.assertEqual(output_powers.count(0), option.group_count - 1)
+
+    def test_duplicate_normalized_forms_are_collapsed(self):
+        variables = [
+            ("F", "N"), ("rho", "kg/m^3"), ("U", "m/s"),
+            ("L", "m"), ("mu", "Pa*s"),
+        ]
+        options = analyze_options(variables, unit_power=["F"])
+        distinct = distinct_options(options)
+        self.assertEqual(len(options), 4)
+        self.assertEqual(len(distinct), 3)
+        self.assertIn(("rho", "U", "mu"), [o.repeating_variables for o in distinct])
+        self.assertNotIn(("rho", "L", "mu"), [o.repeating_variables for o in distinct])
 
     def test_sphere(self):
         result = analyze([("V", "m^3"), ("R", "m")], repeating=["R"])

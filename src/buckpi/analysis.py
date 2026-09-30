@@ -175,6 +175,24 @@ def analyze_options(variables, unit_power=None) -> tuple[AnalysisResult, ...]:
     return tuple(options)
 
 
+def distinct_options(options) -> tuple[AnalysisResult, ...]:
+    """Collapse choices that display the same normalized set of Pi groups.
+
+    Different repeating-variable sets can occasionally generate exactly the
+    same normalized basis.  Preserve the first such choice so the interface
+    does not present duplicate forms.
+    """
+    distinct = []
+    seen = set()
+    for option in options:
+        key = tuple(sorted(group.exponents for group in option.groups))
+        if key in seen:
+            continue
+        seen.add(key)
+        distinct.append(option)
+    return tuple(distinct)
+
+
 def analyze(variables, repeating=None) -> AnalysisResult:
     """Return the first admissible representation (compatibility helper).
 
