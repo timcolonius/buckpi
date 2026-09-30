@@ -74,6 +74,18 @@ class BuckPiTests(unittest.TestCase):
         self.assertIn(("rho", "U", "mu"), [o.repeating_variables for o in distinct])
         self.assertNotIn(("rho", "L", "mu"), [o.repeating_variables for o in distinct])
 
+    def test_single_group_forms_are_equivalent_up_to_a_power(self):
+        variables = [("T", "s"), ("L", "m"), ("g", "m/s^2")]
+        options = analyze_options(variables)
+        self.assertEqual(len(options), 3)
+        self.assertEqual(len(distinct_options(options)), 1)
+
+    def test_sphere_group_and_its_inverse_are_collapsed(self):
+        variables = [("V", "m^3"), ("R", "m")]
+        options = analyze_options(variables)
+        self.assertEqual(len(options), 2)
+        self.assertEqual(len(distinct_options(options)), 1)
+
     def test_sphere(self):
         result = analyze([("V", "m^3"), ("R", "m")], repeating=["R"])
         self.assertEqual(result.groups[0].exponents, (Fraction(1), Fraction(-3)))
@@ -91,6 +103,7 @@ class BuckPiTests(unittest.TestCase):
         self.assertEqual(result.rank, 3)
         self.assertEqual(result.group_count, 3)
         self.assertEqual(len(analyze_options(variables)), 14)
+        self.assertEqual(len(distinct_options(analyze_options(variables))), 9)
 
     def test_unknown_unit(self):
         with self.assertRaises(UnitError):

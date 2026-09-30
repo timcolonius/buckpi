@@ -176,16 +176,26 @@ def analyze_options(variables, unit_power=None) -> tuple[AnalysisResult, ...]:
 
 
 def distinct_options(options) -> tuple[AnalysisResult, ...]:
-    """Collapse choices that display the same normalized set of Pi groups.
+    """Collapse choices with the same groups up to nonzero powers.
 
-    Different repeating-variable sets can occasionally generate exactly the
-    same normalized basis.  Preserve the first such choice so the interface
-    does not present duplicate forms.
+    A Pi group is represented by its exponent vector. Multiplying that vector
+    by any nonzero rational number merely raises the group to a power, so each
+    vector is normalized by its first nonzero exponent. Multi-group forms are
+    compared without regard to group order. Preserve the first representative
+    so the interface does not present equivalent forms more than once.
     """
     distinct = []
     seen = set()
     for option in options:
-        key = tuple(sorted(group.exponents for group in option.groups))
+        group_rays = []
+        for group in option.groups:
+            pivot = next((power for power in group.exponents if power), None)
+            if pivot is None:
+                normalized = group.exponents
+            else:
+                normalized = tuple(power / pivot for power in group.exponents)
+            group_rays.append(normalized)
+        key = tuple(sorted(group_rays))
         if key in seen:
             continue
         seen.add(key)

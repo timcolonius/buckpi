@@ -398,11 +398,11 @@ def result_panel(answers):
         )
 
     group_word = "group" if answer.group_count == 1 else "groups"
-    choice_word = "choice" if len(answers) == 1 else "choices"
+    form_word = "form" if len(answers) == 1 else "forms"
     summary = pn.pane.HTML(
         f'<h2>Result</h2><p>{len(answer.names)} variables, rank {answer.rank}: '
         f'<strong>{answer.group_count} independent dimensionless {group_word}</strong> and '
-        f'<strong>{len(answers)} admissible repeating-variable {choice_word}</strong>.</p>'
+        f'<strong>{len(answers)} distinct &Pi;-group {form_word}</strong>.</p>'
     )
     clipboard_source = pn.widgets.TextAreaInput(visible=False)
     copy_button = pn.widgets.Button(name="Copy LaTeX", button_type="primary", width=110)
