@@ -1,5 +1,4 @@
 from html import escape
-import re
 
 import panel as pn
 
@@ -61,27 +60,6 @@ body { background: var(--buck-pale); color: var(--buck-navy); }
 }
 .bkpi-intro p { margin: 0; }
 .bkpi-error { background:#fff5f5; border-left:4px solid #b42318; color:#b42318; padding:12px 16px; border-radius:6px; }
-.bkpi-variable-group {
-  position: relative;
-  border: 1px solid var(--buck-line);
-  border-radius: 8px;
-  padding: 18px 12px 10px;
-  margin-top: 12px;
-}
-.bkpi-variable-group::before {
-  position: absolute;
-  top: -0.72em;
-  left: 14px;
-  padding: 0 7px;
-  background: white;
-  color: var(--buck-blue);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.35;
-}
-.bkpi-output-group::before { content: "Output"; }
-.bkpi-input-group::before { content: "Input"; }
-.bkpi-math-chip { transition: background-color 120ms ease, border-color 120ms ease; }
 @media (max-width: 620px) {
   .bkpi-brand { gap: 14px; padding: 16px; }
   .bkpi-mark { transform: scale(0.86); transform-origin: left center; margin-right: -8px; }
@@ -118,61 +96,25 @@ MATH_CELL_STYLE = {
     "border": "1px solid #b9d4e4",
     "box-sizing": "border-box",
 }
+HEADER_STYLE = {
+    "background": "#126a9c",
+    "color": "white",
+    "padding": "10px 12px",
+    "border": "1px solid #a9cadc",
+    "font-weight": "600",
+}
+OPTION_STYLE = {
+    "background": "#e3f0f7",
+    "padding": "10px 12px",
+    "border": "1px solid #b9d4e4",
+    "font-weight": "600",
+}
 CARD_STYLES = {
     "background": "white",
     "border": "2px solid #126a9c",
     "border-radius": "10px",
     "padding": "10px 14px",
 }
-CHOICE_CHIP_ACTIVE_STYLES = {
-    "position": "relative",
-    "background": "#126a9c",
-    "border": "1px solid #126a9c",
-    "border-radius": "6px",
-    "color": "white",
-    "cursor": "pointer",
-}
-CHOICE_CHIP_INACTIVE_STYLES = {
-    "position": "relative",
-    "background": "#e8f3f9",
-    "border": "1px solid #b9d4e4",
-    "border-radius": "6px",
-    "color": "#0b2d4d",
-    "cursor": "pointer",
-}
-CHOICE_LABEL_ACTIVE_STYLES = {
-    "display": "flex",
-    "align-items": "center",
-    "justify-content": "center",
-    "font-size": "16px",
-    "line-height": "1",
-    "text-align": "center",
-    "color": "white",
-    "pointer-events": "none",
-}
-CHOICE_LABEL_INACTIVE_STYLES = {
-    "display": "flex",
-    "align-items": "center",
-    "justify-content": "center",
-    "font-size": "16px",
-    "line-height": "1",
-    "text-align": "center",
-    "color": "#0b2d4d",
-    "pointer-events": "none",
-}
-
-
-def repeating_choice_width(names):
-    """Estimate the rendered math width without counting LaTeX command text."""
-    if not names:
-        return 74
-    width = 24 + 12 * (len(names) - 1)
-    for name in names:
-        latex = symbol_latex(name)
-        glyphs = re.sub(r"\\[A-Za-z]+", "x", latex)
-        glyphs = re.sub(r"[{}_^\\\s]", "", glyphs)
-        width += max(20, 10 * len(glyphs) + 10)
-    return max(74, min(230, width))
 
 EXAMPLES = {
     "Sphere volume": [("V", "m^3"), ("R", "m")],
@@ -193,7 +135,7 @@ next_row_id = 0
 example = pn.widgets.Select(
     name="Load an example", options=list(EXAMPLES), value="Pendulum", width=280
 )
-add = pn.widgets.Button(name="+ Add input", button_type="light", width=110)
+add = pn.widgets.Button(name="+ Add variable", button_type="light", width=120)
 table = pn.Column(sizing_mode="stretch_width", margin=(0, 10, 16, 10))
 result = pn.Column(sizing_mode="stretch_width", margin=(0, 10))
 
@@ -217,12 +159,12 @@ def update_preview(event, preview):
         preview.styles = PREVIEW_ERROR_STYLE
 
 
-def make_row(name_value="", unit_value="", is_output=False):
+def make_row(name_value="", unit_value=""):
     global next_row_id
     next_row_id += 1
     row_id = str(next_row_id)
     name = pn.widgets.TextInput(
-        name="Output variable" if is_output else "Input variable",
+        name="Variable",
         description=VARIABLE_TIP,
         value=name_value,
         value_input=name_value,
@@ -237,9 +179,7 @@ def make_row(name_value="", unit_value="", is_output=False):
         placeholder="e.g. kg/m^3",
         width=240,
     )
-    remove = None if is_output else pn.widgets.Button(
-        name="Remove", button_type="light", width=80, align="center"
-    )
+    remove = pn.widgets.Button(name="Remove", button_type="light", width=80, align="center")
     preview_text = "$" + symbol_latex(name_value) + "$" if name_value else r"$\text{preview}$"
     preview = pn.pane.LaTeX(
         preview_text,
@@ -251,30 +191,16 @@ def make_row(name_value="", unit_value="", is_output=False):
     name.param.watch(lambda event, pane=preview: update_preview(event, pane), "value_input")
     name.param.watch(mark_example_edited, "value_input")
     unit.param.watch(mark_example_edited, "value_input")
-    row_objects = [name, unit, preview]
-    if remove is not None:
-        remove.on_click(lambda event, target=row_id: remove_row(target))
-        row_objects.append(remove)
+    remove.on_click(lambda event, target=row_id: remove_row(target))
+    row_objects = [name, unit, preview, remove]
     row_layout = pn.Row(*row_objects, sizing_mode="stretch_width")
     return row_id, name, unit, preview, remove, row_layout
 
 def refresh_table():
-    if not rows:
-        table.objects = []
-        return
-    output_group = pn.Column(
-        rows[0][5],
-        css_classes=["bkpi-variable-group", "bkpi-output-group"],
-    )
-    input_group = pn.Column(
-        *[row[5] for row in rows[1:]],
-        add,
-        css_classes=["bkpi-variable-group", "bkpi-input-group"],
-    )
     variables_box = pn.Column(
         pn.pane.HTML("<h2>Variables</h2>"),
-        output_group,
-        input_group,
+        *[row[5] for row in rows],
+        add,
         styles=CARD_STYLES,
     )
     table.objects = [variables_box]
@@ -284,8 +210,8 @@ def load_example(event=None):
     global loading_example
     loading_example = True
     rows.clear()
-    for index, (name_value, unit_value) in enumerate(EXAMPLES[example.value]):
-        rows.append(make_row(name_value, unit_value, is_output=(index == 0)))
+    for name_value, unit_value in EXAMPLES[example.value]:
+        rows.append(make_row(name_value, unit_value))
     refresh_table()
     example.stylesheets = []
     loading_example = False
@@ -299,8 +225,6 @@ def add_row(event=None):
 
 
 def remove_row(target):
-    if rows and rows[0][0] == target:
-        return
     rows[:] = [row for row in rows if row[0] != target]
     refresh_table()
     mark_example_edited()
@@ -312,110 +236,42 @@ RESULT_CARD_STYLES = {
     "border-radius": "10px",
     "padding": "16px 18px",
 }
-RELATIONSHIP_SECTION_STYLES = {
-    "background": "#f6fafc",
-    "border": "1px solid #c9deea",
-    "border-radius": "8px",
-    "padding": "10px 14px",
-}
-
-
-def split_relationship_groups(answer, output_name):
-    output_index = list(answer.names).index(output_name)
-    output_group_index = next(
-        index
-        for index, group in enumerate(answer.groups)
-        if group.exponents[output_index] == 1
-    )
-    output_group = answer.groups[output_group_index]
-    input_groups = tuple(
-        group for index, group in enumerate(answer.groups) if index != output_group_index
-    )
-    return output_group, input_groups
-
-
-def relationship_latex(answer, output_name):
-    output_group, input_groups = split_relationship_groups(answer, output_name)
-    lines = [
-        r"\Pi_{0} &= " + output_group.expression_latex(list(answer.names))
-    ]
-    lines.extend(
-        rf"\Pi_{{{index}}} &= " + group.expression_latex(list(answer.names))
-        for index, group in enumerate(input_groups, 1)
-    )
+def aligned_latex(answers):
+    lines = []
+    for option_number, option in enumerate(answers, 1):
+        groups = [
+            rf"\Pi_{{{group_number}}} = "
+            + group.expression_latex(list(option.names))
+            for group_number, group in enumerate(option.groups, 1)
+        ]
+        prefix = rf"\text{{Option {option_number}:}}\quad & "
+        lines.append(prefix + r"\qquad ".join(groups))
     return r"\begin{aligned}" + "\n" + (r" \\" + "\n").join(lines) + "\n" + r"\end{aligned}"
 
 
-def centered_math(expression):
-    return pn.FlexBox(
-        pn.pane.LaTeX(
-            r"$\displaystyle " + expression + "$",
-            renderer="katex",
-            sizing_mode="stretch_width",
-            margin=0,
-            styles={"font-size": "20px", "text-align": "center"},
-        ),
-        height=82,
-        sizing_mode="stretch_width",
-        margin=0,
-        align_items="center",
-        justify_content="center",
-        styles=MATH_CELL_STYLE,
-    )
-
-
-def relationship_view(answer, output_name):
-    output_group, input_groups = split_relationship_groups(answer, output_name)
-    output_section = pn.Column(
-        pn.pane.HTML("<h3>Output group</h3>"),
-        centered_math(r"\Pi_{0} = " + output_group.expression_latex(list(answer.names))),
-        styles=RELATIONSHIP_SECTION_STYLES,
-    )
-    sections = [output_section]
-    if input_groups:
-        input_formulas = pn.Row(
-            *[
-                centered_math(
-                    rf"\Pi_{{{index}}} = " + group.expression_latex(list(answer.names))
-                )
-                for index, group in enumerate(input_groups, 1)
-            ],
-            sizing_mode="stretch_width",
-        )
-        sections.append(
-            pn.Column(
-                pn.pane.HTML("<h3>Input groups</h3>"),
-                input_formulas,
-                styles=RELATIONSHIP_SECTION_STYLES,
-            )
-        )
-    return pn.Column(*sections, sizing_mode="stretch_width")
-
-
-def no_relationship_result(answer):
-    return pn.Column(
-        pn.pane.HTML(
-            "<h2>Result</h2><p><strong>The hypothesized dimensionless relationship "
-            "does not exist</strong> for the specified output, inputs, and dimensions.</p>"
-        ),
-        sizing_mode="stretch_width",
-        styles=RESULT_CARD_STYLES,
-    )
-
-
-def relationship_result(answers, output_name):
+def result_table(answers):
     answer = answers[0]
+    if answer.group_count == 0:
+        return pn.Column(
+            pn.pane.HTML(
+                "<h2>Result</h2><p><strong>No nontrivial dimensionless groups exist</strong> "
+                "for the specified variables and dimensions.</p>"
+            ),
+            sizing_mode="stretch_width",
+            styles=RESULT_CARD_STYLES,
+        )
+
+    pi_width = min(320, max(230, 780 // max(answer.group_count, 1)))
+    grid_width = 80 + answer.group_count * pi_width
     group_word = "group" if answer.group_count == 1 else "groups"
-    choice_word = "choice" if len(answers) == 1 else "choices"
+    form_word = "form" if len(answers) == 1 else "forms"
     summary = pn.pane.HTML(
         f'<h2>Result</h2><p>{len(answer.names)} variables, rank {answer.rank}: '
-        f'<strong>{answer.group_count} independent dimensionless {group_word}</strong> and '
-        f'<strong>{len(answers)} repeating-variable {choice_word}</strong>.</p>'
+        f'<strong>{answer.group_count} independent dimensionless {group_word}</strong>, shown in '
+        f'<strong>{len(answers)} admissible {form_word}</strong>.</p>'
     )
-    clipboard_source = pn.widgets.TextAreaInput(visible=False)
-    copy_button = pn.widgets.Button(
-        name="Copy LaTeX", button_type="primary", width=110
-    )
+    clipboard_source = pn.widgets.TextAreaInput(value=aligned_latex(answers), visible=False)
+    copy_button = pn.widgets.Button(name="Copy LaTeX", button_type="primary", width=110)
     copy_status = pn.pane.HTML("", width=65, margin=(12, 0, 0, 0))
     copy_button.js_on_click(
         args={"source": clipboard_source, "status": copy_status},
@@ -437,109 +293,91 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
 }
 """,
     )
-    active = pn.Column(sizing_mode="stretch_width")
-    choice_buttons = []
-    choice_chips = []
-    choice_labels = []
-
-    def update_relationship(index=0):
-        selected = answers[index]
-        active.objects = [relationship_view(selected, output_name)]
-        clipboard_source.value = relationship_latex(selected, output_name)
-        for choice_index, chip in enumerate(choice_chips):
-            chip.styles = (
-                CHOICE_CHIP_ACTIVE_STYLES
-                if choice_index == index
-                else CHOICE_CHIP_INACTIVE_STYLES
-            )
-            choice_labels[choice_index].styles = (
-                CHOICE_LABEL_ACTIVE_STYLES
-                if choice_index == index
-                else CHOICE_LABEL_INACTIVE_STYLES
-            )
-
-    for index, option in enumerate(answers):
-        label = ", ".join(option.repeating_variables) or "None"
-        math_label = (
-            r",\;".join(symbol_latex(name) for name in option.repeating_variables)
-            or r"\mathrm{None}"
-        )
-        chip_width = repeating_choice_width(option.repeating_variables)
-        button = pn.widgets.Button(
-            name=label,
-            button_type="light",
-            width=chip_width,
-            height=38,
-            sizing_mode="fixed",
-            margin=0,
-            styles={
-                "position": "absolute",
-                "inset": "0",
-                "z-index": "2",
-                "opacity": "0",
-                "cursor": "pointer",
-            },
-        )
-        button.on_click(lambda event, selected=index: update_relationship(selected))
-        choice_buttons.append(button)
-        math_pane = pn.pane.LaTeX(
-            "$" + math_label + "$",
-            renderer="katex",
-            width=chip_width,
-            height=38,
-            sizing_mode="fixed",
-            margin=0,
-            styles=CHOICE_LABEL_INACTIVE_STYLES,
-        )
-        choice_labels.append(math_pane)
-        choice_chips.append(
-            pn.Column(
-                pn.FlexBox(
-                    math_pane,
-                    width=chip_width,
-                    height=38,
-                    sizing_mode="fixed",
-                    margin=0,
-                    align_items="center",
-                    justify_content="center",
-                    styles={
-                        "pointer-events": "none",
-                    },
-                ),
-                button,
-                width=chip_width,
-                height=38,
-                sizing_mode="fixed",
-                margin=0,
-                styles=CHOICE_CHIP_INACTIVE_STYLES,
-                css_classes=["bkpi-math-chip"],
-            )
-        )
-
-    repeating = pn.Column(
-        pn.pane.Markdown("**Choose Repeating Variables**", margin=(0, 0, 4, 0)),
-        pn.FlexBox(
-            *choice_chips,
-            flex_wrap="wrap",
-            gap="8px",
-            sizing_mode="stretch_width",
-        ),
-        sizing_mode="stretch_width",
-        margin=0,
-    )
-    update_relationship()
-    controls = pn.Row(
-        repeating,
+    result_heading = pn.Row(
+        summary,
+        pn.Spacer(sizing_mode="stretch_width"),
         copy_status,
         copy_button,
         sizing_mode="stretch_width",
         align="center",
-        margin=(0, 0, 12, 0),
+    )
+    option_header = pn.FlexBox(
+        pn.pane.HTML("Option", margin=0, styles={"color": "white", "text-align": "center"}),
+        width=80,
+        height=42,
+        sizing_mode="fixed",
+        margin=0,
+        align_items="center",
+        justify_content="center",
+        styles=HEADER_STYLE,
+    )
+    pi_headers = [
+        pn.FlexBox(
+            pn.pane.HTML(
+                f"&Pi;<sub>{index}</sub>",
+                margin=0,
+                styles={"color": "white", "text-align": "center"},
+            ),
+            width=pi_width,
+            height=42,
+            sizing_mode="fixed",
+            margin=0,
+            align_items="center",
+            justify_content="center",
+            styles=HEADER_STYLE,
+        )
+        for index in range(1, answer.group_count + 1)
+    ]
+    header = pn.Row(option_header, *pi_headers, width=grid_width, sizing_mode=None, margin=0)
+    option_rows = []
+    for row_number, option in enumerate(answers, 1):
+        option_cell = pn.FlexBox(
+            pn.pane.HTML(str(row_number), margin=0),
+            width=80,
+            height=86,
+            sizing_mode="fixed",
+            margin=0,
+            align_items="center",
+            justify_content="center",
+            styles=OPTION_STYLE,
+        )
+        cells = [
+            pn.FlexBox(
+                pn.pane.LaTeX(
+                    r"$\displaystyle " + group.expression_latex(list(option.names)) + "$",
+                    renderer="katex",
+                    sizing_mode="stretch_width",
+                    margin=0,
+                    styles={"font-size": "20px", "text-align": "center"},
+                ),
+                width=pi_width,
+                height=86,
+                sizing_mode="fixed",
+                margin=0,
+                align_items="center",
+                justify_content="center",
+                styles=MATH_CELL_STYLE,
+            )
+            for group in option.groups
+        ]
+        option_rows.append(
+            pn.Row(option_cell, *cells, width=grid_width, sizing_mode=None, margin=0)
+        )
+    grid = pn.Column(
+        header,
+        *option_rows,
+        width=grid_width,
+        sizing_mode=None,
+        align="center",
+        styles={"overflow-x": "auto"},
+    )
+    note = pn.pane.HTML(
+        "<small>Each row is a complete independent set. Equivalent rows differ only in the chosen basis.</small>"
     )
     return pn.Column(
-        summary,
-        controls,
-        active,
+        result_heading,
+        grid,
+        note,
         clipboard_source,
         sizing_mode="stretch_width",
         styles=RESULT_CARD_STYLES,
@@ -555,23 +393,9 @@ def calculate_groups(event=None):
     try:
         if any(not name.strip() or not unit.strip() for name, unit in variables):
             raise ValueError("Each row needs both a variable name and a unit expression")
-        output_row = rows[0] if rows else None
-        if output_row is None or not output_row[1].value_input.strip():
-            raise ValueError("Enter a name for the output variable")
-        output_name = output_row[1].value_input.strip()
-        baseline = analyze_options(variables)
-        if baseline[0].group_count == 0:
-            result.objects = [no_relationship_result(baseline[0])]
-        else:
-            try:
-                answers = analyze_options(variables, [output_name])
-            except ValueError as exc:
-                if str(exc).startswith("No independent Pi-group set"):
-                    result.objects = [no_relationship_result(baseline[0])]
-                else:
-                    raise
-            else:
-                result.objects = [relationship_result(answers, output_name)]
+        if not variables:
+            raise ValueError("Enter at least one variable and unit expression")
+        result.objects = [result_table(analyze_options(variables))]
     except (ValueError, UnitError, SymbolError) as exc:
         result.objects = [
             pn.pane.HTML(
@@ -594,9 +418,9 @@ app = pn.Column(
         '</div></div>'
     ),
     pn.pane.HTML(
-        '<div class="bkpi-intro"><p>BuckPi expresses a physical input-output relation in terms of '
-        'dimensionless groups using the Buckingham &Pi; theorem. Enter the output first, followed by its '
-        'inputs, then explore equivalent representations based on different repeating variables.</p></div>'
+        '<div class="bkpi-intro"><p>BuckPi reveals the dimensionless structure of a physical problem. '
+        'Enter its variables and dimensions to find every admissible independent set of dimensionless '
+        'groups using the Buckingham &Pi; theorem.</p></div>'
     ),
     pn.Row(example),
     table,
