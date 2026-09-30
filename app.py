@@ -61,6 +61,15 @@ body { background: var(--buck-pale); color: var(--buck-navy); }
 }
 .bkpi-intro p { margin: 0; }
 .bkpi-error { background:#fff5f5; border-left:4px solid #b42318; color:#b42318; padding:12px 16px; border-radius:6px; }
+.bkpi-rank {
+  display: inline-block;
+  background: var(--buck-soft);
+  border: 1px solid var(--buck-line);
+  border-radius: 999px;
+  color: var(--buck-navy);
+  padding: 6px 12px;
+  white-space: nowrap;
+}
 .bkpi-math-chip { transition: background-color 120ms ease, border-color 120ms ease; }
 @media (max-width: 620px) {
   .bkpi-brand { gap: 14px; padding: 16px; }
@@ -78,6 +87,10 @@ UNIT_TIP = (
 VARIABLE_TIP = (
     r"Enter ordinary text or LaTeX-style notation. Examples: U, \rho, c_p, U_{\infty}, and \Delta p. "
     "Greek commands, subscripts, and superscripts are supported."
+)
+ISOLATE_TIP = (
+    "Require this variable to be non-repeating and normalized to exponent 1 in one Pi group. "
+    "At most n minus the dimension-matrix rank variables can be isolated."
 )
 EDITED_EXAMPLE_STYLESHEET = """
 select, .bk-input { color: #7794a8 !important; font-style: italic !important; }
@@ -168,12 +181,17 @@ EXAMPLES = {
 }
 rows = []
 loading_example = False
+updating_isolates = False
 next_row_id = 0
 
 example = pn.widgets.Select(
     name="Load an example", options=list(EXAMPLES), value="Pendulum", width=280
 )
 add = pn.widgets.Button(name="+ Add variable", button_type="light", width=120)
+rank_indicator = pn.pane.HTML(
+    '<div class="bkpi-rank"><strong>Dimension-matrix rank:</strong> &mdash;</div>',
+    margin=(5, 0),
+)
 table = pn.Column(sizing_mode="stretch_width", margin=(0, 10, 16, 10))
 result = pn.Column(sizing_mode="stretch_width", margin=(0, 10))
 
@@ -197,6 +215,26 @@ def update_preview(event, preview):
         preview.styles = PREVIEW_ERROR_STYLE
 
 
+def isolate_changed(event=None):
+    if not updating_isolates:
+        mark_example_edited()
+
+
+def update_isolate_controls(limit=None):
+    global updating_isolates
+    selected = [row[3] for row in rows if row[3].value]
+    if limit is not None and len(selected) > limit:
+        updating_isolates = True
+        for checkbox in selected[limit:]:
+            checkbox.value = False
+        updating_isolates = False
+        selected = selected[:limit]
+    at_limit = limit is not None and len(selected) >= limit
+    for row in rows:
+        checkbox = row[3]
+        checkbox.disabled = at_limit and not checkbox.value
+
+
 def make_row(name_value="", unit_value=""):
     global next_row_id
     next_row_id += 1
@@ -217,6 +255,15 @@ def make_row(name_value="", unit_value=""):
         placeholder="e.g. kg/m^3",
         width=240,
     )
+    isolate = pn.widgets.Checkbox(name="Isolate", value=False, width=72, margin=0)
+    isolate_cell = pn.Row(
+        isolate,
+        pn.widgets.TooltipIcon(value=ISOLATE_TIP, width=20, margin=0),
+        width=105,
+        height=42,
+        margin=(5, 10),
+        styles={"display": "flex", "align-items": "center", "justify-content": "center"},
+    )
     remove = pn.widgets.Button(name="Remove", button_type="light", width=80, align="center")
     preview_text = "$" + symbol_latex(name_value) + "$" if name_value else r"$\text{preview}$"
     preview = pn.pane.LaTeX(
@@ -229,15 +276,23 @@ def make_row(name_value="", unit_value=""):
     name.param.watch(lambda event, pane=preview: update_preview(event, pane), "value_input")
     name.param.watch(mark_example_edited, "value_input")
     unit.param.watch(mark_example_edited, "value_input")
+    isolate.param.watch(isolate_changed, "value")
     remove.on_click(lambda event, target=row_id: remove_row(target))
-    row_objects = [name, unit, preview, remove]
+    row_objects = [name, unit, isolate_cell, preview, remove]
     row_layout = pn.Row(*row_objects, sizing_mode="stretch_width")
-    return row_id, name, unit, preview, remove, row_layout
+    return row_id, name, unit, isolate, preview, remove, row_layout
 
 def refresh_table():
-    variables_box = pn.Column(
+    heading = pn.Row(
         pn.pane.HTML("<h2>Variables</h2>"),
-        *[row[5] for row in rows],
+        pn.Spacer(sizing_mode="stretch_width"),
+        rank_indicator,
+        sizing_mode="stretch_width",
+        align="center",
+    )
+    variables_box = pn.Column(
+        heading,
+        *[row[6] for row in rows],
         add,
         styles=CARD_STYLES,
     )
@@ -480,7 +535,7 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
 def calculate_groups(event=None):
     variables = [
         (name.value_input, unit.value_input)
-        for _, name, unit, _, _, _ in rows
+        for _, name, unit, _, _, _, _ in rows
         if name.value_input.strip() or unit.value_input.strip()
     ]
     try:
@@ -488,8 +543,26 @@ def calculate_groups(event=None):
             raise ValueError("Each row needs both a variable name and a unit expression")
         if not variables:
             raise ValueError("Enter at least one variable and unit expression")
-        result.objects = [result_panel(analyze_options(variables))]
+        baseline = analyze_options(variables)
+        answer = baseline[0]
+        limit = answer.group_count
+        update_isolate_controls(limit)
+        isolated = [
+            name.value_input.strip()
+            for _, name, _, isolate, _, _, _ in rows
+            if isolate.value and name.value_input.strip()
+        ]
+        rank_indicator.object = (
+            '<div class="bkpi-rank"><strong>Dimension-matrix rank:</strong> '
+            f'{answer.rank} &middot; <strong>Isolation limit:</strong> {limit}</div>'
+        )
+        answers = analyze_options(variables, isolated) if isolated else baseline
+        result.objects = [result_panel(answers)]
     except (ValueError, UnitError, SymbolError) as exc:
+        rank_indicator.object = (
+            '<div class="bkpi-rank"><strong>Dimension-matrix rank:</strong> &mdash;</div>'
+        )
+        update_isolate_controls()
         result.objects = [
             pn.pane.HTML(
                 f'<div class="bkpi-error"><strong>Error:</strong> {escape(str(exc))}</div>'

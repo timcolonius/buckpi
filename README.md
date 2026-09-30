@@ -8,6 +8,10 @@ The browser app treats all variables symmetrically. It offers every admissible
 choice of repeating variables, then displays the selected independent set of
 Pi groups with groups numbered from 1.
 
+The Variables card reports the dimension-matrix rank as inputs change. An
+`Isolate` checkbox requires that variable to be non-repeating and normalized to
+exponent 1; at most `n - rank` variables may be isolated at once.
+
 ## Python use
 
 ```python
