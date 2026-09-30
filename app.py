@@ -1,4 +1,5 @@
 from html import escape
+import re
 
 import panel as pn
 
@@ -60,6 +61,7 @@ body { background: var(--buck-pale); color: var(--buck-navy); }
 }
 .bkpi-intro p { margin: 0; }
 .bkpi-error { background:#fff5f5; border-left:4px solid #b42318; color:#b42318; padding:12px 16px; border-radius:6px; }
+.bkpi-math-chip { transition: background-color 120ms ease, border-color 120ms ease; }
 @media (max-width: 620px) {
   .bkpi-brand { gap: 14px; padding: 16px; }
   .bkpi-mark { transform: scale(0.86); transform-origin: left center; margin-right: -8px; }
@@ -96,25 +98,61 @@ MATH_CELL_STYLE = {
     "border": "1px solid #b9d4e4",
     "box-sizing": "border-box",
 }
-HEADER_STYLE = {
-    "background": "#126a9c",
-    "color": "white",
-    "padding": "10px 12px",
-    "border": "1px solid #a9cadc",
-    "font-weight": "600",
-}
-OPTION_STYLE = {
-    "background": "#e3f0f7",
-    "padding": "10px 12px",
-    "border": "1px solid #b9d4e4",
-    "font-weight": "600",
-}
 CARD_STYLES = {
     "background": "white",
     "border": "2px solid #126a9c",
     "border-radius": "10px",
     "padding": "10px 14px",
 }
+CHOICE_CHIP_ACTIVE_STYLES = {
+    "position": "relative",
+    "background": "#126a9c",
+    "border": "1px solid #126a9c",
+    "border-radius": "6px",
+    "color": "white",
+    "cursor": "pointer",
+}
+CHOICE_CHIP_INACTIVE_STYLES = {
+    "position": "relative",
+    "background": "#e8f3f9",
+    "border": "1px solid #b9d4e4",
+    "border-radius": "6px",
+    "color": "#0b2d4d",
+    "cursor": "pointer",
+}
+CHOICE_LABEL_ACTIVE_STYLES = {
+    "display": "flex",
+    "align-items": "center",
+    "justify-content": "center",
+    "font-size": "16px",
+    "line-height": "1",
+    "text-align": "center",
+    "color": "white",
+    "pointer-events": "none",
+}
+CHOICE_LABEL_INACTIVE_STYLES = {
+    "display": "flex",
+    "align-items": "center",
+    "justify-content": "center",
+    "font-size": "16px",
+    "line-height": "1",
+    "text-align": "center",
+    "color": "#0b2d4d",
+    "pointer-events": "none",
+}
+
+
+def repeating_choice_width(names):
+    """Estimate rendered math width without counting LaTeX command text."""
+    if not names:
+        return 74
+    width = 24 + 12 * (len(names) - 1)
+    for name in names:
+        latex = symbol_latex(name)
+        glyphs = re.sub(r"\\[A-Za-z]+", "x", latex)
+        glyphs = re.sub(r"[{}_^\\\s]", "", glyphs)
+        width += max(20, 10 * len(glyphs) + 10)
+    return max(74, min(230, width))
 
 EXAMPLES = {
     "Sphere volume": [("V", "m^3"), ("R", "m")],
@@ -236,20 +274,61 @@ RESULT_CARD_STYLES = {
     "border-radius": "10px",
     "padding": "16px 18px",
 }
-def aligned_latex(answers):
-    lines = []
-    for option_number, option in enumerate(answers, 1):
-        groups = [
-            rf"\Pi_{{{group_number}}} = "
-            + group.expression_latex(list(option.names))
-            for group_number, group in enumerate(option.groups, 1)
-        ]
-        prefix = rf"\text{{Option {option_number}:}}\quad & "
-        lines.append(prefix + r"\qquad ".join(groups))
+FORM_SECTION_STYLES = {
+    "background": "#f6fafc",
+    "border": "1px solid #c9deea",
+    "border-radius": "8px",
+    "padding": "10px 14px",
+}
+
+
+def form_latex(answer):
+    lines = [
+        rf"\Pi_{{{index}}} &= " + group.expression_latex(list(answer.names))
+        for index, group in enumerate(answer.groups, 1)
+    ]
     return r"\begin{aligned}" + "\n" + (r" \\" + "\n").join(lines) + "\n" + r"\end{aligned}"
 
 
-def result_table(answers):
+def form_view(answer):
+    pi_width = min(360, max(250, 820 // max(answer.group_count, 1)))
+    formulas = pn.Row(
+        *[
+            pn.FlexBox(
+                pn.pane.LaTeX(
+                    r"$\displaystyle \Pi_{"
+                    + str(index)
+                    + "} = "
+                    + group.expression_latex(list(answer.names))
+                    + "$",
+                    renderer="katex",
+                    sizing_mode="stretch_width",
+                    margin=0,
+                    styles={"font-size": "20px", "text-align": "center"},
+                ),
+                width=pi_width,
+                height=86,
+                sizing_mode="fixed",
+                margin=0,
+                align_items="center",
+                justify_content="center",
+                styles=MATH_CELL_STYLE,
+            )
+            for index, group in enumerate(answer.groups, 1)
+        ],
+        width=answer.group_count * pi_width,
+        sizing_mode=None,
+        margin=0,
+    )
+    return pn.Column(
+        pn.pane.HTML("<h3>Dimensionless groups</h3>"),
+        formulas,
+        sizing_mode="stretch_width",
+        styles=FORM_SECTION_STYLES | {"overflow-x": "auto"},
+    )
+
+
+def result_panel(answers):
     answer = answers[0]
     if answer.group_count == 0:
         return pn.Column(
@@ -261,16 +340,14 @@ def result_table(answers):
             styles=RESULT_CARD_STYLES,
         )
 
-    pi_width = min(320, max(230, 780 // max(answer.group_count, 1)))
-    grid_width = 80 + answer.group_count * pi_width
     group_word = "group" if answer.group_count == 1 else "groups"
-    form_word = "form" if len(answers) == 1 else "forms"
+    choice_word = "choice" if len(answers) == 1 else "choices"
     summary = pn.pane.HTML(
         f'<h2>Result</h2><p>{len(answer.names)} variables, rank {answer.rank}: '
-        f'<strong>{answer.group_count} independent dimensionless {group_word}</strong>, shown in '
-        f'<strong>{len(answers)} admissible {form_word}</strong>.</p>'
+        f'<strong>{answer.group_count} independent dimensionless {group_word}</strong> and '
+        f'<strong>{len(answers)} admissible repeating-variable {choice_word}</strong>.</p>'
     )
-    clipboard_source = pn.widgets.TextAreaInput(value=aligned_latex(answers), visible=False)
+    clipboard_source = pn.widgets.TextAreaInput(visible=False)
     copy_button = pn.widgets.Button(name="Copy LaTeX", button_type="primary", width=110)
     copy_status = pn.pane.HTML("", width=65, margin=(12, 0, 0, 0))
     copy_button.js_on_click(
@@ -293,91 +370,107 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
 }
 """,
     )
-    result_heading = pn.Row(
-        summary,
-        pn.Spacer(sizing_mode="stretch_width"),
+    active = pn.Column(sizing_mode="stretch_width")
+    choice_buttons = []
+    choice_chips = []
+    choice_labels = []
+
+    def update_form(index=0):
+        selected = answers[index]
+        active.objects = [form_view(selected)]
+        clipboard_source.value = form_latex(selected)
+        for choice_index, chip in enumerate(choice_chips):
+            chip.styles = (
+                CHOICE_CHIP_ACTIVE_STYLES
+                if choice_index == index
+                else CHOICE_CHIP_INACTIVE_STYLES
+            )
+            choice_labels[choice_index].styles = (
+                CHOICE_LABEL_ACTIVE_STYLES
+                if choice_index == index
+                else CHOICE_LABEL_INACTIVE_STYLES
+            )
+
+    for index, option in enumerate(answers):
+        label = ", ".join(option.repeating_variables) or "None"
+        math_label = (
+            r",\;".join(symbol_latex(name) for name in option.repeating_variables)
+            or r"\mathrm{None}"
+        )
+        chip_width = repeating_choice_width(option.repeating_variables)
+        button = pn.widgets.Button(
+            name=label,
+            button_type="light",
+            width=chip_width,
+            height=38,
+            sizing_mode="fixed",
+            margin=0,
+            styles={
+                "position": "absolute",
+                "inset": "0",
+                "z-index": "2",
+                "opacity": "0",
+                "cursor": "pointer",
+            },
+        )
+        button.on_click(lambda event, selected=index: update_form(selected))
+        choice_buttons.append(button)
+        math_pane = pn.pane.LaTeX(
+            "$" + math_label + "$",
+            renderer="katex",
+            width=chip_width,
+            height=38,
+            sizing_mode="fixed",
+            margin=0,
+            styles=CHOICE_LABEL_INACTIVE_STYLES,
+        )
+        choice_labels.append(math_pane)
+        choice_chips.append(
+            pn.Column(
+                pn.FlexBox(
+                    math_pane,
+                    width=chip_width,
+                    height=38,
+                    sizing_mode="fixed",
+                    margin=0,
+                    align_items="center",
+                    justify_content="center",
+                    styles={"pointer-events": "none"},
+                ),
+                button,
+                width=chip_width,
+                height=38,
+                sizing_mode="fixed",
+                margin=0,
+                styles=CHOICE_CHIP_INACTIVE_STYLES,
+                css_classes=["bkpi-math-chip"],
+            )
+        )
+
+    repeating = pn.Column(
+        pn.pane.Markdown("**Choose Repeating Variables**", margin=(0, 0, 4, 0)),
+        pn.FlexBox(
+            *choice_chips,
+            flex_wrap="wrap",
+            gap="8px",
+            sizing_mode="stretch_width",
+        ),
+        sizing_mode="stretch_width",
+        margin=0,
+    )
+    update_form()
+    controls = pn.Row(
+        repeating,
         copy_status,
         copy_button,
         sizing_mode="stretch_width",
         align="center",
-    )
-    option_header = pn.FlexBox(
-        pn.pane.HTML("Option", margin=0, styles={"color": "white", "text-align": "center"}),
-        width=80,
-        height=42,
-        sizing_mode="fixed",
-        margin=0,
-        align_items="center",
-        justify_content="center",
-        styles=HEADER_STYLE,
-    )
-    pi_headers = [
-        pn.FlexBox(
-            pn.pane.HTML(
-                f"&Pi;<sub>{index}</sub>",
-                margin=0,
-                styles={"color": "white", "text-align": "center"},
-            ),
-            width=pi_width,
-            height=42,
-            sizing_mode="fixed",
-            margin=0,
-            align_items="center",
-            justify_content="center",
-            styles=HEADER_STYLE,
-        )
-        for index in range(1, answer.group_count + 1)
-    ]
-    header = pn.Row(option_header, *pi_headers, width=grid_width, sizing_mode=None, margin=0)
-    option_rows = []
-    for row_number, option in enumerate(answers, 1):
-        option_cell = pn.FlexBox(
-            pn.pane.HTML(str(row_number), margin=0),
-            width=80,
-            height=86,
-            sizing_mode="fixed",
-            margin=0,
-            align_items="center",
-            justify_content="center",
-            styles=OPTION_STYLE,
-        )
-        cells = [
-            pn.FlexBox(
-                pn.pane.LaTeX(
-                    r"$\displaystyle " + group.expression_latex(list(option.names)) + "$",
-                    renderer="katex",
-                    sizing_mode="stretch_width",
-                    margin=0,
-                    styles={"font-size": "20px", "text-align": "center"},
-                ),
-                width=pi_width,
-                height=86,
-                sizing_mode="fixed",
-                margin=0,
-                align_items="center",
-                justify_content="center",
-                styles=MATH_CELL_STYLE,
-            )
-            for group in option.groups
-        ]
-        option_rows.append(
-            pn.Row(option_cell, *cells, width=grid_width, sizing_mode=None, margin=0)
-        )
-    grid = pn.Column(
-        header,
-        *option_rows,
-        width=grid_width,
-        sizing_mode=None,
-        align="center",
-        styles={"overflow-x": "auto"},
-    )
-    note = pn.pane.HTML(
-        "<small>Each row is a complete independent set. Equivalent rows differ only in the chosen basis.</small>"
+        margin=(0, 0, 12, 0),
     )
     return pn.Column(
-        result_heading,
-        grid,
-        note,
+        summary,
+        controls,
+        active,
         clipboard_source,
         sizing_mode="stretch_width",
         styles=RESULT_CARD_STYLES,
@@ -395,7 +488,7 @@ def calculate_groups(event=None):
             raise ValueError("Each row needs both a variable name and a unit expression")
         if not variables:
             raise ValueError("Enter at least one variable and unit expression")
-        result.objects = [result_table(analyze_options(variables))]
+        result.objects = [result_panel(analyze_options(variables))]
     except (ValueError, UnitError, SymbolError) as exc:
         result.objects = [
             pn.pane.HTML(
