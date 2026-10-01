@@ -1,10 +1,12 @@
 from html import escape
+from io import BytesIO
 import re
 
 import panel as pn
 
 from buckpi import (
-    SymbolError, UnitError, analyze_options, distinct_options, symbol_latex,
+    SymbolError, UnitError, analyze_options, decode_case, distinct_options,
+    encode_case, symbol_latex,
 )
 
 pn.extension("katex", sizing_mode="stretch_width")
@@ -185,11 +187,20 @@ rows = []
 loading_example = False
 updating_isolates = False
 next_row_id = 0
+selected_repeating_variables = ()
 
 example = pn.widgets.Select(
     name="Load an example", options=list(EXAMPLES), value="Pendulum", width=280
 )
 add = pn.widgets.Button(name="+ Add variable", button_type="light", width=120)
+save_case = pn.widgets.FileDownload(
+    name="Save case",
+    filename="buckpi-case.json",
+    button_type="primary",
+    width=110,
+)
+load_case = pn.widgets.FileInput(name="Load case", accept=".json,application/json", width=170)
+case_status = pn.pane.HTML("", width=150, margin=(8, 0, 0, 0))
 rank_indicator = pn.pane.HTML(
     '<div class="bkpi-rank"><strong>Dimension-matrix rank:</strong> &mdash;</div>',
     margin=(5, 0),
@@ -200,6 +211,7 @@ result = pn.Column(sizing_mode="stretch_width", margin=(0, 10))
 
 def mark_example_edited(event=None):
     if not loading_example:
+        case_status.object = ""
         example.stylesheets = [EDITED_EXAMPLE_STYLESHEET]
         calculate_groups()
 
@@ -302,13 +314,15 @@ def refresh_table():
 
 
 def load_example(event=None):
-    global loading_example
+    global loading_example, selected_repeating_variables
     loading_example = True
+    selected_repeating_variables = ()
     rows.clear()
     for name_value, unit_value in EXAMPLES[example.value]:
         rows.append(make_row(name_value, unit_value))
     refresh_table()
     example.stylesheets = []
+    case_status.object = ""
     loading_example = False
     calculate_groups()
 
@@ -323,6 +337,50 @@ def remove_row(target):
     rows[:] = [row for row in rows if row[0] != target]
     refresh_table()
     mark_example_edited()
+
+
+def case_download():
+    variables = [
+        (name.value_input, unit.value_input, isolate.value)
+        for _, name, unit, isolate, _, _, _ in rows
+    ]
+    return BytesIO(encode_case(variables, selected_repeating_variables))
+
+
+def load_saved_case(event):
+    global loading_example, selected_repeating_variables
+    if not event.new:
+        return
+    try:
+        saved = decode_case(event.new)
+        variables = [(item.name, item.unit) for item in saved.variables]
+        isolated = [item.name for item in saved.variables if item.isolate]
+        analyze_options(variables, isolated)
+
+        loading_example = True
+        try:
+            new_rows = []
+            for item in saved.variables:
+                row = make_row(item.name, item.unit)
+                row[3].value = item.isolate
+                new_rows.append(row)
+        finally:
+            loading_example = False
+
+        rows[:] = new_rows
+        selected_repeating_variables = saved.repeating_variables
+        refresh_table()
+        example.stylesheets = [EDITED_EXAMPLE_STYLESHEET]
+        calculate_groups()
+        case_status.object = '<span style="color:#126a9c">Case loaded.</span>'
+    except (ValueError, UnitError, SymbolError) as exc:
+        case_status.object = (
+            '<span style="color:#b42318"><strong>Error:</strong> '
+            f'{escape(str(exc))}</span>'
+        )
+    finally:
+        load_case.value = None
+        load_case.filename = None
 
 
 RESULT_CARD_STYLES = {
@@ -386,6 +444,7 @@ def form_view(answer):
 
 
 def result_panel(answers):
+    global selected_repeating_variables
     answer = answers[0]
     if answer.group_count == 0:
         return pn.Column(
@@ -433,7 +492,9 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
     choice_labels = []
 
     def update_form(index=0):
+        global selected_repeating_variables
         selected = answers[index]
+        selected_repeating_variables = selected.repeating_variables
         active.objects = [form_view(selected)]
         clipboard_source.value = form_latex(selected)
         for choice_index, chip in enumerate(choice_chips):
@@ -515,7 +576,14 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
         sizing_mode="stretch_width",
         margin=0,
     )
-    update_form()
+    initial_index = next(
+        (
+            index for index, option in enumerate(answers)
+            if option.repeating_variables == selected_repeating_variables
+        ),
+        0,
+    )
+    update_form(initial_index)
     controls = pn.Row(
         repeating,
         copy_status,
@@ -562,12 +630,14 @@ def calculate_groups(event=None):
             distinct_options(analyze_options(variables, isolated))
             if isolated else baseline
         )
+        save_case.disabled = False
         result.objects = [result_panel(answers)]
     except (ValueError, UnitError, SymbolError) as exc:
         rank_indicator.object = (
             '<div class="bkpi-rank"><strong>Dimension-matrix rank:</strong> &mdash;</div>'
         )
         update_isolate_controls()
+        save_case.disabled = True
         result.objects = [
             pn.pane.HTML(
                 f'<div class="bkpi-error"><strong>Error:</strong> {escape(str(exc))}</div>'
@@ -578,6 +648,8 @@ def calculate_groups(event=None):
 
 example.param.watch(load_example, "value")
 add.on_click(add_row)
+save_case.callback = case_download
+load_case.param.watch(load_saved_case, "value")
 
 app = pn.Column(
     pn.pane.HTML(
@@ -593,7 +665,15 @@ app = pn.Column(
         'Enter its variables and dimensions to find every admissible independent set of dimensionless '
         'groups using the Buckingham &Pi; theorem.</p></div>'
     ),
-    pn.Row(example),
+    pn.Row(
+        example,
+        pn.Spacer(sizing_mode="stretch_width"),
+        save_case,
+        load_case,
+        case_status,
+        sizing_mode="stretch_width",
+        align="end",
+    ),
     table,
     result,
     pn.pane.Markdown(

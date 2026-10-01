@@ -2,8 +2,8 @@ import unittest
 from fractions import Fraction
 
 from buckpi import (
-    SymbolError, UnitError, analyze, analyze_options, dimensions,
-    distinct_options, symbol_html, symbol_latex,
+    SymbolError, UnitError, analyze, analyze_options, decode_case, dimensions,
+    distinct_options, encode_case, symbol_html, symbol_latex,
 )
 
 
@@ -126,6 +126,25 @@ class BuckPiTests(unittest.TestCase):
     def test_unsupported_symbol_command(self):
         with self.assertRaises(SymbolError):
             symbol_html(r"\notacommand")
+
+    def test_case_file_round_trip(self):
+        variables = [
+            ("F", "N", True), (r"\rho", "kg/m^3", False),
+            ("U", "m/s", False), ("L", "m", False),
+            (r"\mu", "Pa*s", False),
+        ]
+        saved = decode_case(encode_case(variables, (r"\rho", "U", "L")))
+        self.assertEqual(
+            [(item.name, item.unit, item.isolate) for item in saved.variables],
+            variables,
+        )
+        self.assertEqual(saved.repeating_variables, (r"\rho", "U", "L"))
+
+    def test_invalid_case_file_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "valid BuckPi"):
+            decode_case(b"not json")
+        with self.assertRaisesRegex(ValueError, "version"):
+            decode_case('{"format":"buckpi-case","version":99,"variables":[]}')
 
 
 if __name__ == "__main__":

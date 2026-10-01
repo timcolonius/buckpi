@@ -14,6 +14,11 @@ The Variables card reports the dimension-matrix rank as inputs change. An
 `Isolate` checkbox requires that variable to be non-repeating and normalized to
 exponent 1; at most `n - rank` variables may be isolated at once.
 
+Cases can be downloaded as human-readable JSON and loaded again later. A case
+preserves the variables, unit expressions, Isolate selections, and currently
+selected repeating-variable representation; all processing remains local to
+the browser.
+
 ## Python use
 
 ```python
