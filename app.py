@@ -1,5 +1,4 @@
 from html import escape
-from io import BytesIO
 import re
 
 import panel as pn
@@ -193,13 +192,13 @@ example = pn.widgets.Select(
     name="Load an example", options=list(EXAMPLES), value="Pendulum", width=280
 )
 add = pn.widgets.Button(name="+ Add variable", button_type="light", width=120)
-save_case = pn.widgets.FileDownload(
-    name="Save case",
-    filename="buckpi-case.json",
-    button_type="primary",
-    width=110,
+save_case = pn.widgets.Button(
+    name="Save case", button_type="primary", width=110, height=32,
 )
-load_case = pn.widgets.Button(name="Load case", button_type="light", width=110)
+load_case = pn.widgets.Button(
+    name="Load case", button_type="light", width=110, height=32,
+)
+save_case_source = pn.widgets.TextAreaInput(value="", visible=False)
 load_case_source = pn.widgets.TextAreaInput(value="", visible=False)
 case_status = pn.pane.HTML("", width=150, margin=(8, 0, 0, 0))
 rank_indicator = pn.pane.HTML(
@@ -340,12 +339,16 @@ def remove_row(target):
     mark_example_edited()
 
 
-def case_download():
+def case_text():
     variables = [
         (name.value_input, unit.value_input, isolate.value)
         for _, name, unit, isolate, _, _, _ in rows
     ]
-    return BytesIO(encode_case(variables, selected_repeating_variables))
+    return encode_case(variables, selected_repeating_variables).decode("utf-8")
+
+
+def refresh_case_source():
+    save_case_source.value = case_text()
 
 
 def load_saved_case(event):
@@ -447,6 +450,8 @@ def result_panel(answers):
     global selected_repeating_variables
     answer = answers[0]
     if answer.group_count == 0:
+        selected_repeating_variables = ()
+        refresh_case_source()
         return pn.Column(
             pn.pane.HTML(
                 "<h2>Result</h2><p><strong>No nontrivial dimensionless groups exist</strong> "
@@ -495,6 +500,7 @@ if (navigator.clipboard && navigator.clipboard.writeText) {
         global selected_repeating_variables
         selected = answers[index]
         selected_repeating_variables = selected.repeating_variables
+        refresh_case_source()
         active.objects = [form_view(selected)]
         clipboard_source.value = form_latex(selected)
         for choice_index, chip in enumerate(choice_chips):
@@ -638,6 +644,7 @@ def calculate_groups(event=None):
         )
         update_isolate_controls()
         save_case.disabled = True
+        save_case_source.value = ""
         result.objects = [
             pn.pane.HTML(
                 f'<div class="bkpi-error"><strong>Error:</strong> {escape(str(exc))}</div>'
@@ -648,7 +655,19 @@ def calculate_groups(event=None):
 
 example.param.watch(load_example, "value")
 add.on_click(add_row)
-save_case.callback = case_download
+save_case.js_on_click(
+    args={"source": save_case_source},
+    code="""
+if (!source.value) return;
+const blob = new Blob([source.value], {type: "application/json"});
+const url = URL.createObjectURL(blob);
+const link = document.createElement("a");
+link.href = url;
+link.download = "buckpi-case.json";
+link.click();
+setTimeout(() => URL.revokeObjectURL(url), 0);
+""",
+)
 load_case.js_on_click(
     args={"source": load_case_source},
     code="""
@@ -690,6 +709,7 @@ app = pn.Column(
     ),
     table,
     result,
+    save_case_source,
     load_case_source,
     pn.pane.Markdown(
         "Exact rational linear algebra runs locally in your browser. No data is uploaded.  \n"
