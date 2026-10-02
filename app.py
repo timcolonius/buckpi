@@ -199,7 +199,8 @@ save_case = pn.widgets.FileDownload(
     button_type="primary",
     width=110,
 )
-load_case = pn.widgets.FileInput(name="Load case", accept=".json,application/json", width=170)
+load_case = pn.widgets.Button(name="Load case", button_type="light", width=110)
+load_case_source = pn.widgets.TextAreaInput(value="", visible=False)
 case_status = pn.pane.HTML("", width=150, margin=(8, 0, 0, 0))
 rank_indicator = pn.pane.HTML(
     '<div class="bkpi-rank"><strong>Dimension-matrix rank:</strong> &mdash;</div>',
@@ -379,8 +380,7 @@ def load_saved_case(event):
             f'{escape(str(exc))}</span>'
         )
     finally:
-        load_case.value = None
-        load_case.filename = None
+        load_case_source.value = ""
 
 
 RESULT_CARD_STYLES = {
@@ -649,7 +649,21 @@ def calculate_groups(event=None):
 example.param.watch(load_example, "value")
 add.on_click(add_row)
 save_case.callback = case_download
-load_case.param.watch(load_saved_case, "value")
+load_case.js_on_click(
+    args={"source": load_case_source},
+    code="""
+const picker = document.createElement("input");
+picker.type = "file";
+picker.accept = ".json,application/json";
+picker.addEventListener("change", async () => {
+  const file = picker.files && picker.files[0];
+  if (!file) return;
+  source.value = await file.text();
+});
+picker.click();
+""",
+)
+load_case_source.param.watch(load_saved_case, "value")
 
 app = pn.Column(
     pn.pane.HTML(
@@ -676,6 +690,7 @@ app = pn.Column(
     ),
     table,
     result,
+    load_case_source,
     pn.pane.Markdown(
         "Exact rational linear algebra runs locally in your browser. No data is uploaded.  \n"
         "Tim Colonius · California Institute of Technology"
